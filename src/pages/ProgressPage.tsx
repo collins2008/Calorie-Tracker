@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingDown, TrendingUp, Plus, Target, Scale, Camera, Image as ImageIcon, Loader2, Wand2 } from 'lucide-react';
+import { TrendingDown, TrendingUp, Plus, Target, Scale, Camera, Image as ImageIcon, Loader2, Wand2, Trash2 } from 'lucide-react';
 import { useWeightHistory } from '../hooks/useWeightHistory';
 import { useProfile } from '../hooks/useProfile';
 import { useProgressPhotos } from '../hooks/useProgressPhotos';
@@ -56,7 +56,7 @@ export default function ProgressPage() {
       await addPhoto({
         date: getToday(),
         imageBase64: base64Image,
-        weight: latestWeight,
+        weight: latestWeight || undefined,
         bodyFatPercentage: analysis.estimatedBodyFat
       });
 
