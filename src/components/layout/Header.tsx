@@ -1,6 +1,8 @@
-import { Flame } from 'lucide-react';
+import { Flame, Download } from 'lucide-react';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
 
 export function Header() {
+  const { isInstallable, promptInstall } = usePWAInstall();
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US', {
     weekday: 'short',
@@ -18,6 +20,16 @@ export function Header() {
           </div>
           <p className="text-xs text-zinc-500 mt-0.5">{dateStr}</p>
         </div>
+
+        {isInstallable && (
+          <button
+            onClick={promptInstall}
+            className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border border-emerald-500/20"
+          >
+            <Download size={14} />
+            Install App
+          </button>
+        )}
       </div>
     </header>
   );
