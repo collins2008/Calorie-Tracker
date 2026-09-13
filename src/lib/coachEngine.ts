@@ -8,8 +8,13 @@ export function generateAdvice(summary: DailySummary, profile: UserProfile, stre
     advice.push('Struggling to hit protein on a student budget? Add crayfish powder to your stews, eat boiled eggs, beans (ewa), groundnuts, or soya (awara). They are cheap and protein-dense!');
   }
 
-  if (summary.deficit > 700) {
-    advice.push('You are in a large caloric deficit (>700 kcal). Be careful, as extreme deficits can increase the risk of muscle loss. Consider eating a little more.');
+  // Check if they planned a massive deficit
+  const plannedDeficit = summary.tdee - profile.dailyCalorieTarget;
+  if (plannedDeficit > 700) {
+    advice.push('Your daily calorie target puts you in a large deficit (>700 kcal/day). Be careful, as extreme deficits can increase the risk of muscle loss.');
+  } else if (summary.deficit > 1000 && summary.consumed > 1000) {
+    // If they ate a bit but still have a massive deficit (e.g. huge workout or end of day)
+    advice.push('You are in a massive caloric deficit today. Consider eating a bit more to fuel recovery and prevent muscle breakdown.');
   }
 
   const surplus = summary.consumed - summary.tdee - summary.burned;
@@ -29,13 +34,14 @@ export function generateAdvice(summary: DailySummary, profile: UserProfile, stre
     advice.push('You are doing great! Hitting your protein goals while maintaining a healthy deficit is perfect for body recomposition.');
   }
 
-  if (summary.deficit > 0 && profile.targetWeight < profile.weight) {
-    const weightToLose = profile.weight - profile.targetWeight;
-    const dailyDeficit = summary.deficit;
-    const daysToGoal = (weightToLose * 7700) / dailyDeficit;
-    const weeksToGoal = Math.round(daysToGoal / 7);
-    if (weeksToGoal > 0 && weeksToGoal < 100) {
-      advice.push(`At this pace, you could reach your target weight in about ${weeksToGoal} weeks!`);
+  if (profile.targetWeight < profile.weight && profile.targetDate) {
+    const today = new Date();
+    const targetDate = new Date(profile.targetDate);
+    const daysRemaining = Math.max(1, (targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const weeksRemaining = Math.max(1, Math.round(daysRemaining / 7));
+    
+    if (daysRemaining < 300) {
+      advice.push(`Stay consistent! You have about ${weeksRemaining} weeks to hit your target of ${profile.targetWeight}kg by ${targetDate.toLocaleDateString(undefined, {month: 'short', day: 'numeric'})}.`);
     }
   }
 

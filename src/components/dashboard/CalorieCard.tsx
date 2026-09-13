@@ -10,9 +10,10 @@ interface CalorieCardProps {
 }
 
 export const CalorieCard: React.FC<CalorieCardProps> = ({ consumed, target, bmr, burned }) => {
-  const remaining = target - consumed;
+  const netTarget = target + burned;
+  const remaining = netTarget - consumed;
   const isOver = remaining < 0;
-  const percent = Math.min((consumed / target) * 100, 100);
+  const percent = Math.min((consumed / netTarget) * 100, 100);
 
   let barColor = 'bg-emerald-500';
   if (percent >= 100) barColor = 'bg-red-500';
@@ -24,7 +25,7 @@ export const CalorieCard: React.FC<CalorieCardProps> = ({ consumed, target, bmr,
         <h2 className="text-sm font-semibold text-zinc-400 mb-2">Calories Consumed</h2>
         <div className="flex items-baseline gap-1">
           <AnimatedCounter value={consumed} className="text-4xl font-bold text-zinc-100" />
-          <span className="text-lg text-zinc-500">/ {target} kcal</span>
+          <span className="text-lg text-zinc-500">/ {netTarget} kcal</span>
         </div>
         
         <div className="w-full h-3 bg-zinc-800 rounded-full mt-6 mb-2 overflow-hidden">
