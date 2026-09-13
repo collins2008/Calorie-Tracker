@@ -1,12 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { format, addDays, subDays, parseISO } from 'date-fns';
-import { ChevronLeft, ChevronRight, Send, Trash2, Dumbbell, UtensilsCrossed, Loader2, Camera } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Send, Trash2, Dumbbell, UtensilsCrossed, Loader2, Camera, WifiOff, RefreshCw } from 'lucide-react';
 import { useDailyLog } from '../hooks/useDailyLog';
 import { useStreak } from '../hooks/useStreak';
+import { useSyncQueue } from '../hooks/useSyncQueue';
 import { parseNaturalLanguage } from '../lib/aiLogger';
 import { getToday, formatDisplayDate, isToday as checkIsToday } from '../lib/dateUtils';
 import { useToast } from '../components/ui/Toast';
+import { db } from '../lib/db';
 
 const MEAL_ORDER = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 const MEAL_LABELS: Record<string, string> = {
@@ -20,6 +22,7 @@ export default function LogPage() {
   const [date, setDate] = useState(getToday());
   const { meals, workouts, allEntries, addEntry, updateEntry, deleteEntry, isLoading } = useDailyLog(date);
   const { checkIn } = useStreak();
+  const { queue, processQueue, isSyncing } = useSyncQueue();
   const { toast } = useToast();
 
   const [input, setInput] = useState('');
@@ -43,9 +46,26 @@ export default function LogPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleOfflineSave = async () => {
+    await db.syncQueue.add({
+      date,
+      input,
+      imageBase64: imagePreview || undefined,
+      createdAt: Date.now()
+    });
+    toast("You're offline. Meal saved and will be analyzed by AI when you reconnect!", "info");
+    setInput('');
+    setImagePreview(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() && !imagePreview) return;
+
+    if (!navigator.onLine) {
+      await handleOfflineSave();
+      return;
+    }
 
     setIsParsing(true);
     try {
@@ -62,7 +82,11 @@ export default function LogPage() {
       }
     } catch (err: any) {
       console.error('Submit Error:', err);
-      toast(`Error: ${err.message}`, 'error');
+      if (err.message?.toLowerCase().includes('fetch') || err.message?.toLowerCase().includes('network')) {
+        await handleOfflineSave();
+      } else {
+        toast(`Error: ${err.message}`, 'error');
+      }
     } finally {
       setIsParsing(false);
     }
@@ -85,17 +109,44 @@ export default function LogPage() {
     <div className="max-w-lg mx-auto py-4">
         {/* Date Selector */}
       <div className="flex items-center justify-between mb-4 bg-zinc-900 rounded-2xl p-2">
-        <button onClick={handlePrevDay} className="p-2 hover:bg-zinc-800 rounded-xl transition-colors">
+        <button 
+          onClick={handlePrevDay} 
+          aria-label="Previous Day"
+          className="p-2 hover:bg-zinc-800 rounded-xl transition-colors"
+        >
           <ChevronLeft size={20} className="text-zinc-400" />
         </button>
         <div className="text-center">
           <span className="font-medium">{formatDisplayDate(date)}</span>
           {checkIsToday(date) && <span className="ml-2 text-xs text-emerald-500 font-medium">Today</span>}
         </div>
-        <button onClick={handleNextDay} className="p-2 hover:bg-zinc-800 rounded-xl transition-colors">
+        <button 
+          onClick={handleNextDay} 
+          disabled={date >= getToday()}
+          aria-label="Next Day"
+          className="p-2 hover:bg-zinc-800 disabled:opacity-30 disabled:hover:bg-transparent rounded-xl transition-colors"
+        >
           <ChevronRight size={20} className="text-zinc-400" />
         </button>
       </div>
+
+      {/* Sync Queue Warning */}
+      {queue.length > 0 && (
+        <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-between">
+          <div className="flex items-center gap-3 text-sm text-blue-400">
+            <WifiOff size={18} />
+            <span>{queue.length} meal(s) waiting for connection</span>
+          </div>
+          <button 
+            onClick={processQueue} 
+            disabled={isSyncing}
+            className="flex items-center gap-1 text-xs bg-blue-500/20 hover:bg-blue-500/30 transition-colors px-3 py-1.5 rounded-lg text-blue-300 font-medium disabled:opacity-50"
+          >
+            {isSyncing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+            Sync
+          </button>
+        </div>
+      )}
 
       {/* AI Key Warning */}
       {!localStorage.getItem('gemini_api_key') && (

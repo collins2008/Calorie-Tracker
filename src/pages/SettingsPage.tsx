@@ -126,12 +126,12 @@ export default function SettingsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-zinc-400 mb-1">Weight (kg)</label>
-                <input type="number" step="0.1" name="weight" value={formData.weight || ''} onChange={handleChange}
+                <input type="number" step="0.1" min="10" name="weight" value={formData.weight || ''} onChange={handleChange}
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
               </div>
               <div>
                 <label className="block text-sm text-zinc-400 mb-1">Height (cm)</label>
-                <input type="number" name="height" value={formData.height || ''} onChange={handleChange}
+                <input type="number" min="50" name="height" value={formData.height || ''} onChange={handleChange}
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
               </div>
             </div>
@@ -139,7 +139,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-zinc-400 mb-1">Age</label>
-                <input type="number" name="age" value={formData.age || ''} onChange={handleChange}
+                <input type="number" min="1" max="120" name="age" value={formData.age || ''} onChange={handleChange}
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
               </div>
               <div>
@@ -155,12 +155,12 @@ export default function SettingsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-zinc-400 mb-1">Neck (cm)</label>
-                <input type="number" step="0.1" name="neck" value={formData.neck || ''} onChange={handleChange}
+                <input type="number" step="0.1" min="10" name="neck" value={formData.neck || ''} onChange={handleChange}
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
               </div>
               <div>
                 <label className="block text-sm text-zinc-400 mb-1">Waist (cm)</label>
-                <input type="number" step="0.1" name="waist" value={formData.waist || ''} onChange={handleChange}
+                <input type="number" step="0.1" min="20" name="waist" value={formData.waist || ''} onChange={handleChange}
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
               </div>
             </div>
@@ -193,7 +193,7 @@ export default function SettingsPage() {
                     }} className="text-emerald-500 hover:text-emerald-400">Calculate</button>
                   )}
                 </label>
-                <input type="number" step="0.1" name="bodyFatPercentage" value={formData.bodyFatPercentage || ''} onChange={handleChange}
+                <input type="number" step="0.1" min="2" max="70" name="bodyFatPercentage" value={formData.bodyFatPercentage || ''} onChange={handleChange}
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
               </div>
             </div>
@@ -201,12 +201,12 @@ export default function SettingsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-zinc-400 mb-1">Target Wt (kg)</label>
-                <input type="number" step="0.1" name="targetWeight" value={formData.targetWeight || ''} onChange={handleChange}
+                <input type="number" step="0.1" min="10" name="targetWeight" value={formData.targetWeight || ''} onChange={handleChange}
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
               </div>
               <div>
                 <label className="block text-sm text-zinc-400 mb-1">Target Date</label>
-                <input type="date" name="targetDate" value={formData.targetDate || ''} onChange={handleChange}
+                <input type="date" min={new Date().toISOString().split('T')[0]} name="targetDate" value={formData.targetDate || ''} onChange={handleChange}
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
               </div>
             </div>
@@ -215,12 +215,12 @@ export default function SettingsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-zinc-400 mb-1">Daily Calories</label>
-                  <input type="number" name="dailyCalorieTarget" value={formData.dailyCalorieTarget || ''} onChange={handleChange}
+                  <input type="number" min="500" name="dailyCalorieTarget" value={formData.dailyCalorieTarget || ''} onChange={handleChange}
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
                 </div>
                 <div>
                   <label className="block text-sm text-zinc-400 mb-1">Daily Protein (g)</label>
-                  <input type="number" name="dailyProteinTarget" value={formData.dailyProteinTarget || ''} onChange={handleChange}
+                  <input type="number" min="0" name="dailyProteinTarget" value={formData.dailyProteinTarget || ''} onChange={handleChange}
                     className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
                 </div>
               </div>

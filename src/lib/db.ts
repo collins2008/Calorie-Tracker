@@ -62,21 +62,31 @@ export interface ProgressPhoto {
   createdAt: number;
 }
 
+export interface SyncQueueItem {
+  id?: number;
+  date: string; // The date this meal belongs to
+  input: string; // The text description
+  imageBase64?: string; // The photo, if taken
+  createdAt: number;
+}
+
 const db = new Dexie('RecompTrackerDB') as Dexie & {
   profile: EntityTable<UserProfile, 'id'>;
   dailyLogs: EntityTable<DailyLogEntry, 'id'>;
   weightEntries: EntityTable<WeightEntry, 'id'>;
   streaks: EntityTable<StreakData, 'id'>;
   progressPhotos: EntityTable<ProgressPhoto, 'id'>;
+  syncQueue: EntityTable<SyncQueueItem, 'id'>;
   streak: EntityTable<StreakData, 'id'>; // alias
 };
 
-db.version(2).stores({
+db.version(3).stores({
   profile: 'id',
   dailyLogs: '++id, date, type',
   weightEntries: '++id, date',
   streaks: 'id',
   progressPhotos: '++id, date',
+  syncQueue: '++id, createdAt',
 });
 
 // Alias: streak points to the same table as streaks

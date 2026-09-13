@@ -163,13 +163,22 @@ Parse into this STRICT JSON format only (NO markdown):
         });
       }
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts }]
-        })
-      });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+
+      let response;
+      try {
+        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts }]
+          }),
+          signal: controller.signal
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       const data = await response.json();
       
@@ -184,12 +193,17 @@ Parse into this STRICT JSON format only (NO markdown):
 
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (text) {
-        // Extract just the JSON object from the response, ignoring any conversational filler
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        // More robust JSON extraction to ignore markdown code blocks
+        let jsonStr = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+        const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-          return JSON.parse(jsonMatch[0]);
+          try {
+            return JSON.parse(jsonMatch[0]);
+          } catch (e) {
+            throw new Error('AI returned invalid JSON syntax');
+          }
         } else {
-          throw new Error(`Failed to find JSON in response: ${text}`);
+          throw new Error('Failed to find JSON in AI response');
         }
       }
       
