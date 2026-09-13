@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { format, addDays, subDays, parseISO } from 'date-fns';
-import { ChevronLeft, ChevronRight, Send, Trash2, Dumbbell, UtensilsCrossed, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Send, Trash2, Dumbbell, UtensilsCrossed, Loader2, Camera } from 'lucide-react';
 import { useDailyLog } from '../hooks/useDailyLog';
 import { useStreak } from '../hooks/useStreak';
 import { parseNaturalLanguage } from '../lib/aiLogger';
@@ -24,24 +24,39 @@ export default function LogPage() {
 
   const [input, setInput] = useState('');
   const [isParsing, setIsParsing] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handlePrevDay = () => setDate(format(subDays(parseISO(date), 1), 'yyyy-MM-dd'));
   const handleNextDay = () => setDate(format(addDays(parseISO(date), 1), 'yyyy-MM-dd'));
 
+  const handleImageCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const { compressImage } = await import('../lib/imageUtils');
+      const base64Image = await compressImage(file, 800, 0.7);
+      setImagePreview(base64Image);
+    } catch (err) {
+      toast('Failed to load image', 'error');
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() && !imagePreview) return;
 
     setIsParsing(true);
     try {
       const apiKey = localStorage.getItem('gemini_api_key') || undefined;
-      // FIX: Pass the UI's selected date, snapping the temporal boundary
-      const parsed = await parseNaturalLanguage(input, date, apiKey);
+      const parsed = await parseNaturalLanguage(input, date, apiKey, imagePreview || undefined);
       if (parsed) {
         await addEntry({ ...parsed, date }); // force exact date
         await checkIn();
         toast(`✅ Logged: ${parsed.description} (${parsed.calories} kcal)`, 'success');
         setInput('');
+        setImagePreview(null);
       } else {
         toast('Could not understand your input', 'error');
       }
@@ -94,23 +109,53 @@ export default function LogPage() {
       )}
 
       {/* AI Input */}
-      <form onSubmit={handleSubmit} className="mb-8 relative">
-        <input
-          type="text"
-          value={input}
-          maxLength={200}
-          onChange={e => setInput(e.target.value)}
-          placeholder="Type '2 eggs and toast' or '15 min skipping'..."
-          className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 pl-4 pr-14 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-          disabled={isParsing}
-        />
-        <button
-          type="submit"
-          disabled={!input.trim() || isParsing}
-          className="absolute right-2 top-2 bottom-2 aspect-square flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-800 disabled:text-zinc-600 text-white rounded-xl transition-colors"
-        >
-          {isParsing ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
-        </button>
+      <form onSubmit={handleSubmit} className="mb-8 flex flex-col gap-2">
+        {imagePreview && (
+          <div className="relative self-start">
+            <img src={imagePreview} alt="Food preview" className="w-24 h-24 object-cover rounded-xl border border-zinc-700" />
+            <button 
+              type="button" 
+              onClick={() => setImagePreview(null)}
+              className="absolute -top-2 -right-2 bg-zinc-800 p-1 rounded-full border border-zinc-700 hover:bg-zinc-700"
+            >
+              <Trash2 size={14} className="text-zinc-300" />
+            </button>
+          </div>
+        )}
+        <div className="relative flex items-center">
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            ref={fileInputRef}
+            onChange={handleImageCapture}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="absolute left-2 aspect-square flex items-center justify-center p-2 text-zinc-400 hover:text-emerald-400 hover:bg-zinc-800 rounded-xl transition-colors"
+          >
+            <Camera size={20} />
+          </button>
+          
+          <input
+            type="text"
+            value={input}
+            maxLength={200}
+            onChange={e => setInput(e.target.value)}
+            placeholder="Describe food or just snap a pic..."
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 pl-12 pr-14 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+            disabled={isParsing}
+          />
+          <button
+            type="submit"
+            disabled={(!input.trim() && !imagePreview) || isParsing}
+            className="absolute right-2 aspect-square flex items-center justify-center p-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-800 disabled:text-zinc-600 text-white rounded-xl transition-colors"
+          >
+            {isParsing ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+          </button>
+        </div>
       </form>
 
       {/* Entries */}

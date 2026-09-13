@@ -154,6 +154,19 @@ export default function SettingsPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
+                <label className="block text-sm text-zinc-400 mb-1">Neck (cm)</label>
+                <input type="number" step="0.1" name="neck" value={formData.neck || ''} onChange={handleChange}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+              </div>
+              <div>
+                <label className="block text-sm text-zinc-400 mb-1">Waist (cm)</label>
+                <input type="number" step="0.1" name="waist" value={formData.waist || ''} onChange={handleChange}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
                 <label className="block text-sm text-zinc-400 mb-1">Activity Level</label>
                 <select name="activityLevel" value={formData.activityLevel || 'sedentary'} onChange={handleChange}
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
@@ -164,7 +177,22 @@ export default function SettingsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-zinc-400 mb-1">Body Fat %</label>
+                <label className="block text-sm text-zinc-400 mb-1 flex justify-between">
+                  Body Fat %
+                  {formData.neck && formData.waist && formData.height && (
+                    <button type="button" onClick={() => {
+                      // US Navy Method (Men)
+                      const w = Number(formData.waist);
+                      const n = Number(formData.neck);
+                      const h = Number(formData.height);
+                      if (w > n && h > 0) {
+                        const bf = 495 / (1.0324 - 0.19077 * Math.log10(w - n) + 0.15456 * Math.log10(h)) - 450;
+                        setFormData((prev: any) => ({ ...prev, bodyFatPercentage: Math.max(2, Math.round(bf * 10) / 10) }));
+                        toast('Body fat estimated!', 'info');
+                      }
+                    }} className="text-emerald-500 hover:text-emerald-400">Calculate</button>
+                  )}
+                </label>
                 <input type="number" step="0.1" name="bodyFatPercentage" value={formData.bodyFatPercentage || ''} onChange={handleChange}
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
               </div>

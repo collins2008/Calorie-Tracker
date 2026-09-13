@@ -10,6 +10,8 @@ export interface UserProfile {
   activityLevel: 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active';
   targetWeight: number; // kg
   targetDate: string; // ISO date 'YYYY-MM-DD'
+  neck?: number; // cm
+  waist?: number; // cm
   bodyFatPercentage?: number;
   dailyCalorieTarget: number;
   dailyProteinTarget: number; // grams

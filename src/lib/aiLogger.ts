@@ -88,7 +88,7 @@ function parseMockMode(input: string, clientDate: string): ParsedEntry {
   };
 }
 
-export async function parseNaturalLanguage(input: string, clientDate: string, apiKey?: string): Promise<ParsedEntry> {
+export async function parseNaturalLanguage(input: string, clientDate: string, apiKey?: string, imageBase64?: string): Promise<ParsedEntry> {
   if (!apiKey) {
     return parseMockMode(input, clientDate);
   }
@@ -120,9 +120,10 @@ VISUAL ESTIMATION GUIDE:
 - 1 standard piece of chicken/meat = ~80g
 
 INSTRUCTIONS:
-1. Estimate the gram weight based on visual sizes (fists, slices).
-2. Calculate exact macros by multiplying the weight by the Database values above.
-3. Show your math in the "aiReasoning" field so the user can verify your assumption. (e.g. "Assumed 1 fist rice (200g = 260kcal) + 2 eggs (140kcal)")
+1. If an image is provided, visually identify the food and estimate the portion size using the visual guide above.
+2. If text is also provided, use it to refine your visual estimation. If no text is provided, rely entirely on the image.
+3. Calculate exact macros by multiplying the weight by the Database values above.
+4. Show your math in the "aiReasoning" field so the user can verify your assumption. (e.g. "Assumed 1 fist rice (200g = 260kcal) + 2 eggs (140kcal) based on image")
 
 Parse into this STRICT JSON format only (NO markdown):
 {
@@ -144,11 +145,29 @@ Parse into this STRICT JSON format only (NO markdown):
 
   for (const model of modelsToTry) {
     try {
+      let parts: any[] = [{ text: systemPrompt }];
+      
+      if (input.trim()) {
+         parts.push({ text: input });
+      } else if (!imageBase64) {
+         throw new Error("Must provide either text or an image.");
+      }
+
+      if (imageBase64) {
+        const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+        parts.push({
+          inline_data: {
+            mime_type: "image/jpeg",
+            data: base64Data
+          }
+        });
+      }
+
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: systemPrompt }, { text: input }] }]
+          contents: [{ parts }]
         })
       });
 
