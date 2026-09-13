@@ -41,10 +41,12 @@ function parseMockMode(input: string, clientDate: string): ParsedEntry {
   
   for (const preset of WORKOUT_PRESETS) {
     if (lowerInput.includes(preset.name.toLowerCase())) {
+      // Import calculateCaloriesBurned dynamically or just assume an average weight of 75kg for mock mode since we don't have profile here
+      const estimatedCals = (preset.met * 3.5 * 75) / 200 * preset.defaultDurationMin;
       return {
         date, type: 'workout', description: preset.name,
-        calories: 0, protein: 0, carbs: 0, fat: 0, duration: preset.defaultDurationMin,
-        aiReasoning: 'Matched via workout preset.'
+        calories: Math.round(estimatedCals), protein: 0, carbs: 0, fat: 0, duration: preset.defaultDurationMin,
+        aiReasoning: 'Matched via workout preset (assumes 75kg avg weight in offline mock mode).'
       };
     }
   }
@@ -123,7 +125,8 @@ INSTRUCTIONS:
 1. If an image is provided, visually identify the food and estimate the portion size using the visual guide above.
 2. If text is also provided, use it to refine your visual estimation. If no text is provided, rely entirely on the image.
 3. Calculate exact macros by multiplying the weight by the Database values above.
-4. Show your math in the "aiReasoning" field so the user can verify your assumption. (e.g. "Assumed 1 fist rice (200g = 260kcal) + 2 eggs (140kcal) based on image")
+4. IF LOGGING A WORKOUT: Estimate calories burned based on a standard 75kg person (e.g., walking = 150kcal/30m, running = 300kcal/30m, lifting = 120kcal/30m). Set macros to 0.
+5. Show your math in the "aiReasoning" field so the user can verify your assumption.
 
 Parse into this STRICT JSON format only (NO markdown):
 {

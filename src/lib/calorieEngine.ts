@@ -41,6 +41,10 @@ export function calculateDailySummary(logs: Array<any>, profile: UserProfile): D
   const deficit = totalOut - consumed;
   const remaining = Math.max(profile.dailyCalorieTarget - consumed + burned, 0);
   
+  // Recomp math: Protein and Fat are fixed to bodyweight. 
+  // Burned calories strictly increase the Carb allowance to replenish glycogen.
+  const dynamicCarbsTarget = profile.dailyCarbsTarget + (burned / 4);
+  
   return {
     consumed: Math.round(consumed),
     burned: Math.round(burned),
@@ -52,7 +56,7 @@ export function calculateDailySummary(logs: Array<any>, profile: UserProfile): D
     carbsConsumed: Math.round(carbsConsumed),
     fatConsumed: Math.round(fatConsumed),
     proteinTarget: Math.round(profile.dailyProteinTarget),
-    carbsTarget: Math.round(profile.dailyCarbsTarget),
+    carbsTarget: Math.round(dynamicCarbsTarget),
     fatTarget: Math.round(profile.dailyFatTarget),
   };
 }
