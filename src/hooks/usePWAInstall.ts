@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 // Check if app is already installed as PWA
 function isStandalone(): boolean {
@@ -10,6 +10,7 @@ export function usePWAInstall() {
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [showManualBanner, setShowManualBanner] = useState(false);
+  const hasPromptFired = useRef(false);
 
   useEffect(() => {
     // If already installed, do nothing
@@ -23,6 +24,7 @@ export function usePWAInstall() {
       setInstallPrompt(e);
       setIsInstallable(true);
       setShowManualBanner(false);
+      hasPromptFired.current = true;
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -36,7 +38,7 @@ export function usePWAInstall() {
     // If beforeinstallprompt hasn't fired after 3 seconds,
     // show a manual install banner with instructions
     const fallbackTimer = setTimeout(() => {
-      if (!installPrompt) {
+      if (!hasPromptFired.current) {
         setShowManualBanner(true);
       }
     }, 3000);

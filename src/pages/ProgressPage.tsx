@@ -26,11 +26,13 @@ export default function ProgressPage() {
   const handleLogWeight = async (e: React.FormEvent) => {
     e.preventDefault();
     const weight = parseFloat(newWeight);
-    if (!isNaN(weight) && weight > 0) {
-      await addWeightEntry(getToday(), weight);
-      toast(`Weight logged: ${weight} kg`, 'success');
-      setNewWeight('');
+    if (isNaN(weight) || weight < 20 || weight > 500) {
+      toast('Please enter a valid weight between 20kg and 500kg.', 'error');
+      return;
     }
+    await addWeightEntry(getToday(), weight);
+    toast(`Weight logged: ${weight} kg`, 'success');
+    setNewWeight('');
   };
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,9 +50,11 @@ export default function ProgressPage() {
       // 1. Compress Image to save IndexedDB space
       const base64Image = await compressImage(file, 800, 0.7);
       
-      // 2. Scan with AI
+      // 2. Scan with AI with Timeout Race
       toast('Scanning physique...', 'info');
-      const analysis = await analyzeBodyComposition(base64Image, apiKey);
+      const scanPromise = analyzeBodyComposition(base64Image, apiKey);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("AI Analysis timed out. Please try again.")), 30000));
+      const analysis = await Promise.race([scanPromise, timeoutPromise]) as any;
       
       // 3. Save to Gallery
       await addPhoto({
@@ -66,16 +70,20 @@ export default function ProgressPage() {
       }
 
       toast(`Scan complete! Estimated Body Fat: ${analysis.estimatedBodyFat}%`, 'success');
-      
-      // Show reasoning via toast or alert
-      setTimeout(() => alert(`AI Analysis:\n${analysis.reasoning}`), 1000);
-
     } catch (err: any) {
       console.error(err);
       toast(`Error: ${err.message}`, 'error');
     } finally {
       setIsScanning(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDeletePhoto = async (id: number | undefined) => {
+    if (!id) return;
+    if (window.confirm("Are you sure you want to delete this progress photo?")) {
+      await deletePhoto(id);
+      toast('Photo deleted.', 'info');
     }
   };
 
@@ -97,7 +105,7 @@ export default function ProgressPage() {
     const daysDiff = (new Date(lastEntry.date).getTime() - new Date(firstEntry.date).getTime()) / (1000 * 60 * 60 * 24);
     if (daysDiff > 0) {
       const weeklyChange = ((firstEntry.weight - lastEntry.weight) / daysDiff) * 7;
-      if (weeklyChange > 0 && remaining > 0) {
+      if (weeklyChange > 0.05 && remaining > 0) {
         weeksToGoal = Math.round(remaining / weeklyChange);
       }
     }
@@ -111,8 +119,10 @@ export default function ProgressPage() {
       </header>
 
       {/* Tabs */}
-      <div className="flex bg-zinc-900 rounded-xl p-1 mb-6">
+      <div className="flex bg-zinc-900 rounded-xl p-1 mb-6" role="tablist">
         <button
+          role="tab"
+          aria-selected={activeTab === 'charts'}
           onClick={() => setActiveTab('charts')}
           className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
             activeTab === 'charts' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
@@ -121,6 +131,8 @@ export default function ProgressPage() {
           Data & Charts
         </button>
         <button
+          role="tab"
+          aria-selected={activeTab === 'gallery'}
           onClick={() => setActiveTab('gallery')}
           className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${
             activeTab === 'gallery' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
@@ -154,8 +166,9 @@ export default function ProgressPage() {
             </div>
 
             <form onSubmit={handleLogWeight} className="flex gap-2">
-              <input type="number" step="0.1" value={newWeight} onChange={e => setNewWeight(e.target.value)}
+              <input type="number" step="0.1" min="20" max="500" value={newWeight} onChange={e => setNewWeight(e.target.value)}
                 placeholder="Enter today's weight..."
+                aria-label="Today's weight"
                 className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
               <button type="submit" disabled={!newWeight} className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-800 text-white px-5 rounded-xl font-medium flex items-center gap-2">
                 <Plus size={18} /> Log
@@ -209,11 +222,13 @@ export default function ProgressPage() {
             ref={fileInputRef}
             onChange={handlePhotoUpload}
             className="hidden"
+            aria-label="Upload progress photo"
           />
           
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isScanning}
+            aria-label="Take Progress Photo"
             className="w-full bg-zinc-900 border border-dashed border-zinc-700 hover:border-emerald-500 rounded-2xl p-8 flex flex-col items-center justify-center gap-3 transition-colors group"
           >
             {isScanning ? (
@@ -236,7 +251,7 @@ export default function ProgressPage() {
           <div className="grid grid-cols-2 gap-4 mt-6">
             {photos.map(photo => (
               <motion.div key={photo.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="relative group">
-                <img src={photo.imageBase64} alt={`Progress on ${photo.date}`} className="w-full aspect-[3/4] object-cover rounded-2xl bg-zinc-900" />
+                <img src={photo.imageBase64} alt={`Progress photo from ${photo.date}`} loading="lazy" className="w-full aspect-[3/4] object-cover rounded-2xl bg-zinc-900" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent rounded-2xl opacity-90" />
                 
                 <div className="absolute bottom-3 left-3 right-3">
@@ -259,7 +274,8 @@ export default function ProgressPage() {
                 </div>
 
                 <button
-                  onClick={() => photo.id && deletePhoto(photo.id)}
+                  onClick={() => handleDeletePhoto(photo.id)}
+                  aria-label="Delete photo"
                   className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-red-500/80 rounded-full opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm"
                 >
                   <Trash2 size={14} className="text-white" />

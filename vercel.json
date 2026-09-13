@@ -1,22 +1,4 @@
 {
-  "rewrites": [
-    {
-      "source": "/sw.js",
-      "destination": "/sw.js"
-    },
-    {
-      "source": "/manifest.webmanifest",
-      "destination": "/manifest.webmanifest"
-    },
-    {
-      "source": "/workbox-(.*)",
-      "destination": "/workbox-$1"
-    },
-    {
-      "source": "/((?!assets|pwa-|favicon|icons|registerSW).*)",
-      "destination": "/index.html"
-    }
-  ],
   "headers": [
     {
       "source": "/sw.js",
@@ -26,17 +8,8 @@
           "value": "no-cache"
         },
         {
-          "key": "Content-Type",
-          "value": "application/javascript"
-        }
-      ]
-    },
-    {
-      "source": "/manifest.webmanifest",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/manifest+json"
+          "key": "Service-Worker-Allowed",
+          "value": "/"
         }
       ]
     }

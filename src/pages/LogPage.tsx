@@ -98,6 +98,7 @@ export default function LogPage() {
         <input
           type="text"
           value={input}
+          maxLength={200}
           onChange={e => setInput(e.target.value)}
           placeholder="Type '2 eggs and toast' or '15 min skipping'..."
           className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 pl-4 pr-14 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
@@ -160,9 +161,12 @@ export default function LogPage() {
                           <button
                             onClick={() => {
                               const newCals = window.prompt(`Correct the calories for ${entry.description}:`, String(entry.calories));
-                              if (newCals && !isNaN(Number(newCals))) {
-                                entry.id !== undefined && updateEntry(entry.id, { calories: Number(newCals) });
+                              const parsedCals = Number(newCals);
+                              if (newCals && !isNaN(parsedCals) && parsedCals >= 0 && parsedCals < 10000) {
+                                entry.id !== undefined && updateEntry(entry.id, { calories: Math.round(parsedCals) });
                                 toast('Calories updated', 'success');
+                              } else if (newCals) {
+                                toast('Please enter a valid calorie amount', 'error');
                               }
                             }}
                             className="p-2 text-zinc-500 hover:text-emerald-400 transition-colors text-xs font-medium"
@@ -170,7 +174,13 @@ export default function LogPage() {
                             Edit
                           </button>
                           <button
-                            onClick={() => entry.id !== undefined && deleteEntry(entry.id)}
+                            onClick={() => {
+                              if (window.confirm('Delete this meal?')) {
+                                entry.id !== undefined && deleteEntry(entry.id);
+                                toast('Meal deleted', 'info');
+                              }
+                            }}
+                            aria-label="Delete meal"
                             className="p-2 text-zinc-600 hover:text-red-400 transition-colors"
                           >
                             <Trash2 size={16} />
@@ -213,7 +223,13 @@ export default function LogPage() {
                       </div>
                     </div>
                     <button
-                      onClick={() => entry.id !== undefined && deleteEntry(entry.id)}
+                      onClick={() => {
+                        if (window.confirm('Delete this workout?')) {
+                          entry.id !== undefined && deleteEntry(entry.id);
+                          toast('Workout deleted', 'info');
+                        }
+                      }}
+                      aria-label="Delete workout"
                       className="p-2 text-zinc-600 hover:text-red-400 transition-colors"
                     >
                       <Trash2 size={16} />
