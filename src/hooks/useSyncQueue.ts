@@ -26,9 +26,12 @@ export function useSyncQueue() {
     setIsSyncing(true);
     let successCount = 0;
 
+    const userProfile = await db.profile.get('default');
+    const userWeight = userProfile?.weight || 75;
+
     for (const item of items) {
       try {
-        const parsed = await parseNaturalLanguage(item.input, item.date, apiKey, item.imageBase64);
+        const parsed = await parseNaturalLanguage(item.input, item.date, apiKey, item.imageBase64, userWeight);
         if (parsed) {
           await db.dailyLogs.add({ ...parsed, date: item.date, createdAt: Date.now() });
           await db.syncQueue.delete(item.id!);

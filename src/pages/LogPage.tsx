@@ -70,7 +70,10 @@ export default function LogPage() {
     setIsParsing(true);
     try {
       const apiKey = localStorage.getItem('gemini_api_key') || undefined;
-      const parsed = await parseNaturalLanguage(input, date, apiKey, imagePreview || undefined);
+      const userProfile = await db.profile.get('default');
+      const userWeight = userProfile?.weight || 75;
+      
+      const parsed = await parseNaturalLanguage(input, date, apiKey, imagePreview || undefined, userWeight);
       if (parsed) {
         await addEntry({ ...parsed, date }); // force exact date
         await checkIn();

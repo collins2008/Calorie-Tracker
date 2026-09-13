@@ -34,19 +34,17 @@ const MOCK_FOOD_DATABASE: Record<string, { calories: number, protein: number, ca
   'yogurt': { calories: 100, protein: 10, carbs: 15, fat: 0 },
 };
 
-function parseMockMode(input: string, clientDate: string): ParsedEntry {
-  // ... (keep exact same mock mode logic, just add aiReasoning at the end)
+function parseMockMode(input: string, clientDate: string, userWeight: number): ParsedEntry {
   const lowerInput = input.toLowerCase();
   const date = clientDate;
   
   for (const preset of WORKOUT_PRESETS) {
     if (lowerInput.includes(preset.name.toLowerCase())) {
-      // Import calculateCaloriesBurned dynamically or just assume an average weight of 75kg for mock mode since we don't have profile here
-      const estimatedCals = (preset.met * 3.5 * 75) / 200 * preset.defaultDurationMin;
+      const estimatedCals = (preset.met * 3.5 * userWeight) / 200 * preset.defaultDurationMin;
       return {
         date, type: 'workout', description: preset.name,
         calories: Math.round(estimatedCals), protein: 0, carbs: 0, fat: 0, duration: preset.defaultDurationMin,
-        aiReasoning: 'Matched via workout preset (assumes 75kg avg weight in offline mock mode).'
+        aiReasoning: `Matched via workout preset (calculated for your specific ${userWeight}kg bodyweight).`
       };
     }
   }
@@ -90,9 +88,15 @@ function parseMockMode(input: string, clientDate: string): ParsedEntry {
   };
 }
 
-export async function parseNaturalLanguage(input: string, clientDate: string, apiKey?: string, imageBase64?: string): Promise<ParsedEntry> {
+export async function parseNaturalLanguage(
+  input: string, 
+  clientDate: string, 
+  apiKey?: string, 
+  imageBase64?: string,
+  userWeight: number = 75
+): Promise<ParsedEntry> {
   if (!apiKey) {
-    return parseMockMode(input, clientDate);
+    return parseMockMode(input, clientDate, userWeight);
   }
 
   const systemPrompt = `You are an expert nutritionist and data parser specializing in Nigerian cuisine and body recomposition.
@@ -125,7 +129,7 @@ INSTRUCTIONS:
 1. If an image is provided, visually identify the food and estimate the portion size using the visual guide above.
 2. If text is also provided, use it to refine your visual estimation. If no text is provided, rely entirely on the image.
 3. Calculate exact macros by multiplying the weight by the Database values above.
-4. IF LOGGING A WORKOUT: Estimate calories burned based on a standard 75kg person (e.g., walking = 150kcal/30m, running = 300kcal/30m, lifting = 120kcal/30m). Set macros to 0.
+4. IF LOGGING A WORKOUT: The user's exact body weight is ${userWeight}kg. Calculate calories burned using standard MET formulas for a ${userWeight}kg person (e.g., Calories = MET * 3.5 * ${userWeight} / 200 * minutes). Set macros to 0.
 5. Show your math in the "aiReasoning" field so the user can verify your assumption.
 
 Parse into this STRICT JSON format only (NO markdown):
