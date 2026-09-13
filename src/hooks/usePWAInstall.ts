@@ -27,13 +27,14 @@ export function usePWAInstall() {
       hasPromptFired.current = true;
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    
-    window.addEventListener('appinstalled', () => {
+    const handleAppInstalled = () => {
       setInstallPrompt(null);
       setIsInstallable(false);
       setShowManualBanner(false);
-    });
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     // If beforeinstallprompt hasn't fired after 3 seconds,
     // show a manual install banner with instructions
@@ -45,6 +46,7 @@ export function usePWAInstall() {
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
       clearTimeout(fallbackTimer);
     };
   }, []);

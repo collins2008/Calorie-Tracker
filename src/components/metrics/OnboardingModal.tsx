@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '../../hooks/useProfile';
-import { calculateBMR, calculateTDEE } from '../../lib/bmrCalculator';
+import { calculateBMR, calculateTDEE, calculateDailyTargets } from '../../lib/bmrCalculator';
 
 export default function OnboardingModal() {
   const { saveProfile } = useProfile();
@@ -34,25 +34,22 @@ export default function OnboardingModal() {
     const bmr = calculateBMR(weight, height, age, formData.gender as 'male' | 'female');
     const tdee = calculateTDEE(bmr, formData.activityLevel as any);
     
-    // We now use calculateDailyTargets properly
-    import('../../lib/bmrCalculator').then(async ({ calculateDailyTargets }) => {
-      const targets = calculateDailyTargets(tdee, bmr, weight, targetWeight, formData.targetDate);
-
-      await saveProfile({
-        name: formData.name,
-        gender: formData.gender as 'male' | 'female',
-        weight,
-        height,
-        age,
-        activityLevel: formData.activityLevel as any,
-        targetWeight,
-        targetDate: formData.targetDate,
-        bodyFatPercentage: formData.bodyFatPercentage ? Number(formData.bodyFatPercentage) : undefined,
-        dailyCalorieTarget: targets.calorieTarget,
-        dailyProteinTarget: targets.proteinTarget,
-        dailyCarbsTarget: targets.carbsTarget,
-        dailyFatTarget: targets.fatTarget,
-      });
+    const targets = calculateDailyTargets(tdee, bmr, weight, targetWeight, formData.targetDate);
+    
+    await saveProfile({
+      name: formData.name,
+      gender: formData.gender as 'male' | 'female',
+      weight,
+      height,
+      age,
+      activityLevel: formData.activityLevel as any,
+      targetWeight,
+      targetDate: formData.targetDate,
+      bodyFatPercentage: formData.bodyFatPercentage ? Number(formData.bodyFatPercentage) : undefined,
+      dailyCalorieTarget: targets.calorieTarget,
+      dailyProteinTarget: targets.proteinTarget,
+      dailyCarbsTarget: targets.carbsTarget,
+      dailyFatTarget: targets.fatTarget,
     });
   };
 

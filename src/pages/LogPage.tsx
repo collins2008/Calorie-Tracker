@@ -9,6 +9,7 @@ import { parseNaturalLanguage } from '../lib/aiLogger';
 import { getToday, formatDisplayDate, isToday as checkIsToday } from '../lib/dateUtils';
 import { useToast } from '../components/ui/Toast';
 import { db } from '../lib/db';
+import { compressImage } from '../lib/imageUtils';
 
 const MEAL_ORDER = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 const MEAL_LABELS: Record<string, string> = {
@@ -37,7 +38,6 @@ export default function LogPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const { compressImage } = await import('../lib/imageUtils');
       const base64Image = await compressImage(file, 800, 0.7);
       setImagePreview(base64Image);
     } catch (err) {
