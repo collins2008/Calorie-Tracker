@@ -23,9 +23,9 @@ export const MacroRings: React.FC<MacroRingsProps> = ({
           value={proteinConsumed}
           max={proteinTarget}
           color="#10b981"
-          label={`${Math.round(proteinConsumed)}g`}
+          label={`${Math.round(proteinConsumed)} / ${Math.round(proteinTarget)}g`}
           sublabel="Protein"
-          size={70}
+          size={75}
           strokeWidth={6}
         />
         <div className="flex gap-3">
@@ -33,18 +33,18 @@ export const MacroRings: React.FC<MacroRingsProps> = ({
             value={carbsConsumed}
             max={carbsTarget}
             color="#3b82f6"
-            label={`${Math.round(carbsConsumed)}g`}
+            label={`${Math.round(carbsConsumed)} / ${Math.round(carbsTarget)}g`}
             sublabel="Carbs"
-            size={55}
+            size={65}
             strokeWidth={5}
           />
           <CircularProgress
             value={fatConsumed}
             max={fatTarget}
             color="#f59e0b"
-            label={`${Math.round(fatConsumed)}g`}
+            label={`${Math.round(fatConsumed)} / ${Math.round(fatTarget)}g`}
             sublabel="Fat"
-            size={55}
+            size={65}
             strokeWidth={5}
           />
         </div>
