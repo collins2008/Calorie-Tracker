@@ -5,7 +5,7 @@ import { useFavorites } from '../../hooks/useFavorites';
 import { useDailyLog } from '../../hooks/useDailyLog';
 import { useStreak } from '../../hooks/useStreak';
 import { getToday } from '../../lib/dateUtils';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '../ui/Toast';
 
 interface QuickAddFavoritesProps {
   currentDate: string;
