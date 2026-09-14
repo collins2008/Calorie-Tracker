@@ -196,7 +196,7 @@ export default function LogPage() {
             <input
               type="text"
               value={input}
-              maxLength={200}
+              maxLength={1000}
               onChange={e => setInput(e.target.value)}
               placeholder="Describe food, or add text to your photo..."
               className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 pl-12 pr-14 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
