@@ -1,37 +1,50 @@
 export async function compressImage(file: File, maxWidth = 800, quality = 0.7): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
 
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
+    img.onload = () => {
+      // Release memory immediately once the image is loaded into the Image element
+      URL.revokeObjectURL(objectUrl);
 
-        canvas.width = width;
-        canvas.height = height;
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
 
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Failed to get canvas context'));
-          return;
-        }
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
 
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Failed to get canvas context'));
+        return;
+      }
+
+      try {
         ctx.drawImage(img, 0, 0, width, height);
-
-        // Compress to WebP (falls back to JPEG in unsupported browsers)
-        const compressedBase64 = canvas.toDataURL('image/webp', quality);
+        // Use JPEG. WebP encoding in Safari can occasionally cause memory spikes, and JPEG is natively hardware accelerated.
+        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+        
+        // Free up the canvas memory manually
+        canvas.width = 0;
+        canvas.height = 0;
+        
         resolve(compressedBase64);
-      };
-      img.onerror = (err) => reject(err);
+      } catch (e) {
+        reject(e);
+      }
     };
-    reader.onerror = (err) => reject(err);
+
+    img.onerror = (err) => {
+      URL.revokeObjectURL(objectUrl);
+      reject(err);
+    };
+    
+    img.src = objectUrl;
   });
 }

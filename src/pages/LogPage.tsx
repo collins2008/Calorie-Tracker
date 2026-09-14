@@ -176,32 +176,32 @@ export default function LogPage() {
             </button>
           </div>
         )}
-        <div className="relative flex items-center">
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            ref={fileInputRef}
-            onChange={handleImageCapture}
-            className="hidden"
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="absolute left-2 aspect-square flex items-center justify-center p-2 text-zinc-400 hover:text-emerald-400 hover:bg-zinc-800 rounded-xl transition-colors"
-          >
-            <Camera size={20} />
-          </button>
-          
-          <input
-            type="text"
-            value={input}
-            maxLength={200}
-            onChange={e => setInput(e.target.value)}
-            placeholder="Describe food or just snap a pic..."
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 pl-12 pr-14 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-            disabled={isParsing}
-          />
+          <div className="relative flex items-center">
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleImageCapture}
+              className="hidden"
+            />
+            <button
+              type="button"
+              aria-label="Upload Photo"
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute left-2 p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl transition-colors z-10"
+            >
+              <Camera size={20} />
+            </button>
+            
+            <input
+              type="text"
+              value={input}
+              maxLength={200}
+              onChange={e => setInput(e.target.value)}
+              placeholder="Describe food, or add text to your photo..."
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 pl-12 pr-14 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              disabled={isParsing}
+            />
           <button
             type="submit"
             disabled={(!input.trim() && !imagePreview) || isParsing}
