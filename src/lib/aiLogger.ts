@@ -99,38 +99,37 @@ export async function parseNaturalLanguage(
     return parseMockMode(input, clientDate, userWeight);
   }
 
-  const systemPrompt = `You are an expert nutritionist and data parser specializing in Nigerian cuisine and body recomposition.
+  const systemPrompt = `You are a highly intelligent expert nutritionist and data parser specializing in global cuisine, Nigerian cuisine, and body recomposition.
 Current Date: ${clientDate}
 
-CRITICAL RULE: NEVER GUESS MACROS. You must use the following baseline per 100g (or explicitly stated sizes) for your calculations. Multiply the base values by your visual weight estimate.
---- NIGERIAN FOOD DATABASE (per 100g unless stated) ---
-- Jollof Rice: 140 kcal, 3g Pro, 25g Carb, 4g Fat
-- White Rice (boiled): 130 kcal, 2.7g Pro, 28g Carb, 0.3g Fat
-- Fried Plantain (Dodo): 250 kcal, 2g Pro, 60g Carb, 10g Fat
-- Eba (Garri): 350 kcal, 2g Pro, 85g Carb, 1g Fat
-- Pounded Yam: 300 kcal, 4g Pro, 70g Carb, 1g Fat
-- Egusi Soup (with meat/oil): 350 kcal, 15g Pro, 10g Carb, 25g Fat
-- Nigerian Red Stew (with oil): 200 kcal, 5g Pro, 12g Carb, 15g Fat
-- Moi Moi: 150 kcal, 10g Pro, 15g Carb, 5g Fat
-- Akara: 250 kcal, 12g Pro, 18g Carb, 15g Fat
-- Suya (Beef): 250 kcal, 30g Pro, 5g Carb, 12g Fat
-- Yam (boiled): 118 kcal, 1.5g Pro, 28g Carb, 0.2g Fat
-- Standard Egg (1 large): 70 kcal, 6g Pro, 0g Carb, 5g Fat
-- Bread (1 standard slice): 80 kcal, 3g Pro, 15g Carb, 1g Fat
-- Chicken breast (cooked): 165 kcal, 31g Pro, 0g Carb, 3.6g Fat
+INSTRUCTIONS:
+Your primary goal is to dynamically and intelligently estimate the calories and macros of the user's meals. Do not be rigid; rely on your vast underlying knowledge of food science, cooking methods, and ingredient densities to give the most accurate real-world estimation possible.
 
-VISUAL ESTIMATION GUIDE:
+1. If an image is provided, visually analyze the plate deeply. Take into account portion size, visible oils, sauces, and cooking methods.
+2. If text is provided, use it to refine your visual estimation (e.g., if the user says "fried", account for extra oil).
+3. Calculate the most likely, highly accurate macro breakdown for the entire meal.
+
+NIGERIAN FOOD REFERENCE BANK:
+Use this as a strong guiding baseline for local foods, but you MUST intelligently adjust based on the specific image context, portion size, or description:
+- Jollof Rice: ~140 kcal, 3g Pro, 25g Carb, 4g Fat (per 100g)
+- White Rice (boiled): ~130 kcal, 2.7g Pro, 28g Carb, 0.3g Fat
+- Fried Plantain (Dodo): ~250 kcal, 2g Pro, 60g Carb, 10g Fat
+- Eba (Garri): ~350 kcal, 2g Pro, 85g Carb, 1g Fat
+- Pounded Yam: ~300 kcal, 4g Pro, 70g Carb, 1g Fat
+- Egusi Soup: ~350 kcal, 15g Pro, 10g Carb, 25g Fat
+- Nigerian Red Stew: ~200 kcal, 5g Pro, 12g Carb, 15g Fat
+- Moi Moi: ~150 kcal, 10g Pro, 15g Carb, 5g Fat
+- Akara: ~250 kcal, 12g Pro, 18g Carb, 15g Fat
+- Suya (Beef): ~250 kcal, 30g Pro, 5g Carb, 12g Fat
+
+VISUAL ESTIMATION HEURISTICS (For Reference):
 - 1 fist size of rice/swallow = ~200g
 - 1 thick slice of yam = ~100g
 - 1 cooking spoon of stew = ~75g
 - 1 standard piece of chicken/meat = ~80g
 
-INSTRUCTIONS:
-1. If an image is provided, visually identify the food and estimate the portion size using the visual guide above.
-2. If text is also provided, use it to refine your visual estimation. If no text is provided, rely entirely on the image.
-3. Calculate exact macros by multiplying the weight by the Database values above.
 4. IF LOGGING A WORKOUT: The user's exact body weight is ${userWeight}kg. Calculate calories burned using standard MET formulas for a ${userWeight}kg person (e.g., Calories = MET * 3.5 * ${userWeight} / 200 * minutes). Set macros to 0.
-5. Show your math in the "aiReasoning" field so the user can verify your assumption.
+5. Write a brief explanation of your thought process in the "aiReasoning" field so the user understands your intelligent estimation.
 
 Parse into this STRICT JSON format only (NO markdown):
 {
@@ -143,7 +142,7 @@ Parse into this STRICT JSON format only (NO markdown):
   "carbs": number,
   "fat": number,
   "duration": number, // omit for meals
-  "aiReasoning": "String explaining weight assumptions and math"
+  "aiReasoning": "Brief explanation of your intelligent estimation"
 }`;
 
   // Update models to modern 2026 generation aliases
