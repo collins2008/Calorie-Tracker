@@ -193,14 +193,24 @@ export default function LogPage() {
               <Camera size={20} />
             </button>
             
-            <input
-              type="text"
+            <textarea
               value={input}
-              maxLength={1000}
+              maxLength={2000}
+              rows={Math.max(1, Math.min(4, input.split('\n').length))}
               onChange={e => setInput(e.target.value)}
               placeholder="Describe food, or add text to your photo..."
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 pl-12 pr-14 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 pl-12 pr-14 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none min-h-[56px] leading-relaxed"
               disabled={isParsing}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  if ((input.trim() || imagePreview) && !isParsing) {
+                    // Trigger submit programmatically
+                    const form = e.currentTarget.closest('form');
+                    if (form) form.requestSubmit();
+                  }
+                }
+              }}
             />
           <button
             type="submit"
