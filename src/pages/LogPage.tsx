@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { format, addDays, subDays, parseISO } from 'date-fns';
-import { ChevronLeft, ChevronRight, Send, Trash2, Dumbbell, UtensilsCrossed, Loader2, Camera, WifiOff, RefreshCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Send, Trash2, Dumbbell, UtensilsCrossed, Loader2, Camera, WifiOff, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { useDailyLog } from '../hooks/useDailyLog';
 import { useStreak } from '../hooks/useStreak';
 import { useSyncQueue } from '../hooks/useSyncQueue';
@@ -29,7 +29,8 @@ export default function LogPage() {
   const [input, setInput] = useState('');
   const [isParsing, setIsParsing] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const handlePrevDay = () => setDate(format(subDays(parseISO(date), 1), 'yyyy-MM-dd'));
   const handleNextDay = () => setDate(format(addDays(parseISO(date), 1), 'yyyy-MM-dd'));
@@ -43,7 +44,8 @@ export default function LogPage() {
     } catch (err) {
       toast('Failed to load image', 'error');
     }
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+    if (galleryInputRef.current) galleryInputRef.current.value = '';
   };
 
   const handleOfflineSave = async () => {
@@ -180,18 +182,36 @@ export default function LogPage() {
             <input
               type="file"
               accept="image/*"
-              ref={fileInputRef}
+              capture="environment"
+              ref={cameraInputRef}
               onChange={handleImageCapture}
               className="hidden"
             />
-            <button
-              type="button"
-              aria-label="Upload Photo"
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute left-2 p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl transition-colors z-10"
-            >
-              <Camera size={20} />
-            </button>
+            <input
+              type="file"
+              accept="image/*"
+              ref={galleryInputRef}
+              onChange={handleImageCapture}
+              className="hidden"
+            />
+            <div className="absolute left-2 flex gap-1 z-10">
+              <button
+                type="button"
+                aria-label="Take Photo"
+                onClick={() => cameraInputRef.current?.click()}
+                className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl transition-colors"
+              >
+                <Camera size={20} />
+              </button>
+              <button
+                type="button"
+                aria-label="Upload Photo"
+                onClick={() => galleryInputRef.current?.click()}
+                className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl transition-colors"
+              >
+                <ImageIcon size={20} />
+              </button>
+            </div>
             
             <textarea
               value={input}
@@ -199,7 +219,7 @@ export default function LogPage() {
               rows={Math.max(1, Math.min(4, input.split('\n').length))}
               onChange={e => setInput(e.target.value)}
               placeholder="Describe food, or add text to your photo..."
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 pl-12 pr-14 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none min-h-[56px] leading-relaxed"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl py-4 pl-24 pr-14 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none min-h-[56px] leading-relaxed"
               disabled={isParsing}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
