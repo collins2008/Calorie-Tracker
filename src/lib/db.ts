@@ -70,6 +70,18 @@ export interface SyncQueueItem {
   createdAt: number;
 }
 
+export interface SavedItem {
+  id?: number;
+  type: 'meal' | 'workout';
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  duration?: number;
+  createdAt: number;
+}
+
 const db = new Dexie('RecompTrackerDB') as Dexie & {
   profile: EntityTable<UserProfile, 'id'>;
   dailyLogs: EntityTable<DailyLogEntry, 'id'>;
@@ -77,16 +89,18 @@ const db = new Dexie('RecompTrackerDB') as Dexie & {
   streaks: EntityTable<StreakData, 'id'>;
   progressPhotos: EntityTable<ProgressPhoto, 'id'>;
   syncQueue: EntityTable<SyncQueueItem, 'id'>;
+  savedItems: EntityTable<SavedItem, 'id'>;
   streak: EntityTable<StreakData, 'id'>; // alias
 };
 
-db.version(3).stores({
+db.version(4).stores({
   profile: 'id',
   dailyLogs: '++id, date, type',
   weightEntries: '++id, date',
   streaks: 'id',
   progressPhotos: '++id, date',
   syncQueue: '++id, createdAt',
+  savedItems: '++id, type',
 });
 
 // Alias: streak points to the same table as streaks

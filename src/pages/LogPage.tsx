@@ -1,15 +1,17 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { format, addDays, subDays, parseISO } from 'date-fns';
-import { ChevronLeft, ChevronRight, Send, Trash2, Dumbbell, UtensilsCrossed, Loader2, Camera, WifiOff, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Send, Trash2, Dumbbell, UtensilsCrossed, Loader2, Camera, WifiOff, RefreshCw, Image as ImageIcon, Star } from 'lucide-react';
 import { useDailyLog } from '../hooks/useDailyLog';
 import { useStreak } from '../hooks/useStreak';
 import { useSyncQueue } from '../hooks/useSyncQueue';
+import { useFavorites } from '../hooks/useFavorites';
 import { parseNaturalLanguage } from '../lib/aiLogger';
 import { getToday, formatDisplayDate, isToday as checkIsToday } from '../lib/dateUtils';
 import { useToast } from '../components/ui/Toast';
 import { db } from '../lib/db';
 import { compressImage } from '../lib/imageUtils';
+import { QuickAddFavorites } from '../components/log/QuickAddFavorites';
 
 const MEAL_ORDER = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 const MEAL_LABELS: Record<string, string> = {
@@ -24,6 +26,7 @@ export default function LogPage() {
   const { meals, workouts, allEntries, addEntry, updateEntry, deleteEntry, isLoading } = useDailyLog(date);
   const { checkIn } = useStreak();
   const { queue, processQueue, isSyncing } = useSyncQueue();
+  const { addFavorite } = useFavorites();
   const { toast } = useToast();
 
   const [input, setInput] = useState('');
@@ -242,6 +245,8 @@ export default function LogPage() {
         </div>
       </form>
 
+      <QuickAddFavorites currentDate={date} />
+
       {/* Entries */}
       {isLoading ? (
         <div className="flex justify-center py-12"><Loader2 className="animate-spin text-zinc-500" /></div>
@@ -287,6 +292,23 @@ export default function LogPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              addFavorite({
+                                type: 'meal',
+                                name: entry.description,
+                                calories: entry.calories,
+                                protein: entry.protein,
+                                carbs: entry.carbs,
+                                fat: entry.fat
+                              });
+                              toast('Saved to Favorites', 'success');
+                            }}
+                            className="p-2 text-zinc-500 hover:text-amber-400 transition-colors"
+                            aria-label="Save to favorites"
+                          >
+                            <Star size={16} />
+                          </button>
                           <button
                             onClick={() => {
                               const newCals = window.prompt(`Correct the calories for ${entry.description}:`, String(entry.calories));
@@ -351,18 +373,38 @@ export default function LogPage() {
                         {entry.duration && <span>{entry.duration} min</span>}
                       </div>
                     </div>
-                    <button
-                      onClick={() => {
-                        if (window.confirm('Delete this workout?')) {
-                          entry.id !== undefined && deleteEntry(entry.id);
-                          toast('Workout deleted', 'info');
-                        }
-                      }}
-                      aria-label="Delete workout"
-                      className="p-2 text-zinc-600 hover:text-red-400 transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => {
+                          addFavorite({
+                            type: 'workout',
+                            name: entry.description,
+                            calories: entry.calories,
+                            protein: entry.protein,
+                            carbs: entry.carbs,
+                            fat: entry.fat,
+                            duration: entry.duration
+                          });
+                          toast('Saved to Favorites', 'success');
+                        }}
+                        className="p-2 text-zinc-500 hover:text-amber-400 transition-colors"
+                        aria-label="Save to favorites"
+                      >
+                        <Star size={16} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (window.confirm('Delete this workout?')) {
+                            entry.id !== undefined && deleteEntry(entry.id);
+                            toast('Workout deleted', 'info');
+                          }
+                        }}
+                        aria-label="Delete workout"
+                        className="p-2 text-zinc-600 hover:text-red-400 transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </motion.div>
                 ))}
               </div>
