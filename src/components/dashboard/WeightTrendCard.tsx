@@ -7,13 +7,38 @@ interface WeightTrendCardProps {
   targetWeight: number;
   profileWeight?: number;
   startingWeight?: number;
+  profileCreatedAt?: number;
 }
 
-export const WeightTrendCard: React.FC<WeightTrendCardProps> = ({ entries, targetWeight, profileWeight = 0, startingWeight }) => {
+export const WeightTrendCard: React.FC<WeightTrendCardProps> = ({ entries, targetWeight, profileWeight = 0, startingWeight, profileCreatedAt }) => {
   // Deduplicate entries by date (keep the last one logged for that day) to prevent chart rendering glitches
   const uniqueEntriesMap = new Map<string, { date: string; weight: number }>();
   entries.forEach(entry => uniqueEntriesMap.set(entry.date, entry));
-  const cleanEntries = Array.from(uniqueEntriesMap.values());
+  let cleanEntries = Array.from(uniqueEntriesMap.values());
+
+  // Inject starting weight as the first data point if it's missing from the logs, so the chart can draw a trendline
+  if (startingWeight && cleanEntries.length > 0) {
+    const firstLogWeight = cleanEntries[0].weight;
+    if (Math.abs(firstLogWeight - startingWeight) > 0.1) {
+      // Create a date for the starting weight (either profile creation or 1 day before first log)
+      let startDateStr = '';
+      if (profileCreatedAt) {
+        startDateStr = format(new Date(profileCreatedAt), 'yyyy-MM-dd');
+      } else {
+        const firstDate = new Date(cleanEntries[0].date);
+        firstDate.setDate(firstDate.getDate() - 1);
+        startDateStr = format(firstDate, 'yyyy-MM-dd');
+      }
+      
+      // Only unshift if the date doesn't conflict
+      if (!uniqueEntriesMap.has(startDateStr)) {
+        cleanEntries.unshift({ date: startDateStr, weight: Number(startingWeight) });
+      }
+    }
+  } else if (startingWeight && cleanEntries.length === 0) {
+      const startDateStr = profileCreatedAt ? format(new Date(profileCreatedAt), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
+      cleanEntries.push({ date: startDateStr, weight: Number(startingWeight) });
+  }
 
   const latestWeight = cleanEntries.length > 0 ? cleanEntries[cleanEntries.length - 1].weight : profileWeight;
   const startWeight = Number(startingWeight) || (cleanEntries.length > 0 ? cleanEntries[0].weight : profileWeight);
