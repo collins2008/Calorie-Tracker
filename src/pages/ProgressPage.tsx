@@ -22,6 +22,8 @@ export default function ProgressPage() {
   const [newWeight, setNewWeight] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const handleLogWeight = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,43 +41,54 @@ export default function ProgressPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const apiKey = localStorage.getItem('gemini_api_key');
-    if (!apiKey) {
-      toast('Please add your Gemini API Key in Settings to use the AI Scanner.', 'error');
+    setIsScanning(true);
+    let base64Image = '';
+    
+    try {
+      base64Image = await compressImage(file, 800, 0.7);
+    } catch (err: any) {
+      toast('Failed to process image.', 'error');
+      setIsScanning(false);
       return;
     }
 
-    setIsScanning(true);
+    let estimatedBodyFat: number | undefined = undefined;
+    const apiKey = localStorage.getItem('gemini_api_key');
+
+    if (!apiKey) {
+      toast('Saved photo! Add API key in settings for AI body fat scans.', 'info');
+    } else {
+      try {
+        toast('Scanning physique...', 'info');
+        const scanPromise = analyzeBodyComposition(base64Image, apiKey);
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("AI Analysis timed out. Please try again.")), 30000));
+        const analysis = await Promise.race([scanPromise, timeoutPromise]) as any;
+        estimatedBodyFat = analysis.estimatedBodyFat;
+        toast(`Scan complete! Estimated Body Fat: ${estimatedBodyFat}%`, 'success');
+      } catch (err: any) {
+        console.error("AI Scan failed:", err);
+        toast(`Photo saved, but AI failed: ${err.message}`, 'error');
+      }
+    }
+
     try {
-      // 1. Compress Image to save IndexedDB space
-      const base64Image = await compressImage(file, 800, 0.7);
-      
-      // 2. Scan with AI with Timeout Race
-      toast('Scanning physique...', 'info');
-      const scanPromise = analyzeBodyComposition(base64Image, apiKey);
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("AI Analysis timed out. Please try again.")), 30000));
-      const analysis = await Promise.race([scanPromise, timeoutPromise]) as any;
-      
-      // 3. Save to Gallery
+      // Always save to Gallery regardless of AI success
       await addPhoto({
         date: getToday(),
         imageBase64: base64Image,
         weight: latestWeight || undefined,
-        bodyFatPercentage: analysis.estimatedBodyFat
+        bodyFatPercentage: estimatedBodyFat
       });
 
-      // 4. Optionally update profile
-      if (profile && analysis.estimatedBodyFat) {
-        await saveProfile({ ...profile, bodyFatPercentage: analysis.estimatedBodyFat });
+      if (profile && estimatedBodyFat) {
+        // await saveProfile({ ...profile, bodyFatPercentage: estimatedBodyFat });
       }
-
-      toast(`Scan complete! Estimated Body Fat: ${analysis.estimatedBodyFat}%`, 'success');
     } catch (err: any) {
-      console.error(err);
-      toast(`Error: ${err.message}`, 'error');
+      toast('Failed to save photo to gallery', 'error');
     } finally {
       setIsScanning(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
+      if (galleryInputRef.current) galleryInputRef.current.value = '';
     }
   };
 
@@ -219,34 +232,53 @@ export default function ProgressPage() {
             type="file"
             accept="image/*"
             capture="user"
-            ref={fileInputRef}
+            ref={cameraInputRef}
             onChange={handlePhotoUpload}
             className="hidden"
-            aria-label="Upload progress photo"
+          />
+          <input
+            type="file"
+            accept="image/*"
+            ref={galleryInputRef}
+            onChange={handlePhotoUpload}
+            className="hidden"
           />
           
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isScanning}
-            aria-label="Take Progress Photo"
-            className="w-full bg-zinc-900 border border-dashed border-zinc-700 hover:border-emerald-500 rounded-2xl p-8 flex flex-col items-center justify-center gap-3 transition-colors group"
-          >
-            {isScanning ? (
-              <>
-                <Loader2 size={32} className="text-emerald-500 animate-spin mb-2" />
-                <span className="font-medium text-emerald-400">AI Scanning Physique...</span>
-                <span className="text-xs text-zinc-500">Estimating Body Fat %</span>
-              </>
-            ) : (
-              <>
-                <div className="w-14 h-14 bg-zinc-950 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Camera size={24} className="text-emerald-500" />
-                </div>
-                <span className="font-medium text-zinc-200">Take Progress Photo</span>
-                <span className="text-xs text-zinc-500 flex items-center gap-1"><Wand2 size={12}/> AI Body Fat Analysis</span>
-              </>
-            )}
-          </button>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => cameraInputRef.current?.click()}
+              disabled={isScanning}
+              className="w-full bg-zinc-900 border border-dashed border-zinc-700 hover:border-emerald-500 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 transition-colors group"
+            >
+              <div className="w-12 h-12 bg-zinc-950 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Camera size={20} className="text-emerald-500" />
+              </div>
+              <span className="font-medium text-sm text-zinc-200">Take Photo</span>
+              <span className="text-[10px] text-zinc-500 flex items-center gap-1"><Wand2 size={10}/> AI Scan</span>
+            </button>
+
+            <button
+              onClick={() => galleryInputRef.current?.click()}
+              disabled={isScanning}
+              className="w-full bg-zinc-900 border border-dashed border-zinc-700 hover:border-emerald-500 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 transition-colors group"
+            >
+              <div className="w-12 h-12 bg-zinc-950 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                <ImageIcon size={20} className="text-emerald-500" />
+              </div>
+              <span className="font-medium text-sm text-zinc-200">Upload Photo</span>
+              <span className="text-[10px] text-zinc-500 flex items-center gap-1"><Wand2 size={10}/> AI Scan</span>
+            </button>
+          </div>
+
+          {isScanning && (
+            <div className="mt-4 bg-zinc-900 border border-emerald-900/50 rounded-xl p-4 flex items-center justify-center gap-3">
+               <Loader2 size={24} className="text-emerald-500 animate-spin" />
+               <div className="flex flex-col">
+                 <span className="font-medium text-emerald-400 text-sm">AI Scanning Physique...</span>
+                 <span className="text-xs text-zinc-500">Estimating Body Fat %</span>
+               </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4 mt-6">
             {photos.map(photo => (
