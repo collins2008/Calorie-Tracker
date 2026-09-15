@@ -33,13 +33,13 @@ export async function analyzeBodyComposition(
     let mathStatement = '';
     if (isMale && w > n && h > 0) {
       const bf = 495 / (1.0324 - 0.19077 * Math.log10(w - n) + 0.15456 * Math.log10(h)) - 450;
-      mathStatement = `Based on the clinical U.S. Navy Body Fat formula, the user's mathematical body fat is exactly ${bf.toFixed(1)}%.`;
+      mathStatement = `As a secondary reference, the U.S. Navy Body Fat formula estimates they are roughly ${bf.toFixed(1)}%.`;
     } else if (!isMale) {
-      mathStatement = `The user is female. We lack hip measurements for the exact Navy formula, but use their waist (${w}cm) and neck (${n}cm) anthropometrics to anchor your estimate.`;
+      mathStatement = `The user is female. We lack hip measurements for the exact Navy formula, but note their waist (${w}cm) and neck (${n}cm) anthropometrics.`;
     }
 
     statsContext = `
-The user has provided their exact physical measurements:
+The user has provided their physical measurements:
 - Gender: ${userStats.gender || 'male'}
 - Height: ${h} cm
 - Weight: ${userStats.weight || 'unknown'} kg
@@ -47,7 +47,7 @@ The user has provided their exact physical measurements:
 - Waist Circumference: ${w} cm
 
 CRITICAL INSTRUCTION: ${mathStatement}
-You MUST use this mathematical data as your primary baseline anchor. Cross-reference it with the visual data in the photo. If the visual data shows they are significantly leaner or softer than the math suggests, adjust the mathematical baseline by a few percentage points. Provide the final blended result.
+However, the user may have made errors with their measuring tape. Your PRIMARY objective is to analyze the visual data in the photo (vascularity, muscle separation, abdominal definition). Use the mathematical data ONLY as a loose reference point to help ground your estimate. If the visual physique clearly contradicts the math, TRUST THE VISUAL DATA.
 `;
   }
 
