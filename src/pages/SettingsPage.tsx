@@ -265,11 +265,40 @@ export default function SettingsPage() {
               placeholder="AIzaSy..."
               className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
             />
-            <button onClick={handleSaveApiKey}
-              className="bg-zinc-800 hover:bg-zinc-700 px-5 rounded-xl font-medium transition-colors text-sm">
+            <button onClick={handleSaveApiKey} className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 rounded-xl font-medium transition-colors">
               Save
             </button>
           </div>
+          {apiKey && (
+            <p className="text-xs text-emerald-500 mt-3 flex items-center gap-1">
+              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+              API Key is active
+            </p>
+          )}
+        </section>
+
+        {/* Developer Tools */}
+        <section className="bg-zinc-900 rounded-2xl p-6 mb-8 border border-red-900/30">
+          <h2 className="font-semibold text-zinc-300 mb-4">System / Developer</h2>
+          <button 
+            onClick={() => {
+              if (window.confirm('This will force the app to fetch the latest version from the server. Use this if updates are stuck.')) {
+                navigator.serviceWorker?.getRegistrations().then(registrations => {
+                  for (let registration of registrations) {
+                    registration.unregister();
+                  }
+                  window.location.reload();
+                });
+              }
+            }}
+            className="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-600 text-zinc-300 rounded-xl py-3 font-medium transition-colors mb-3"
+          >
+            Force Update App (Clear Cache)
+          </button>
+          
+          <button onClick={handleClearData} className="w-full bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-xl py-3 font-medium flex items-center justify-center gap-2 transition-colors">
+            <Trash2 size={18} /> Wipe All Data
+          </button>
         </section>
 
         {/* Data Management */}
