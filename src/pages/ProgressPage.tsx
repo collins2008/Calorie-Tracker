@@ -100,7 +100,7 @@ export default function ProgressPage() {
     }
   };
 
-  const startingWeight = entries.length > 0 ? entries[0].weight : profile?.weight || 0;
+  const startingWeight = Number(profile?.startingWeight) || (entries.length > 0 ? entries[0].weight : profile?.weight || 0);
   const currentWeight = latestWeight || profile?.weight || 0;
   const targetWeight = profile?.targetWeight || 0;
 

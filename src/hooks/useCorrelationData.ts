@@ -32,7 +32,7 @@ export function useCorrelationData() {
     ])).sort(); // Sort chronologically
     
     // Carry forward the last known weight if they didn't weigh in that day
-    let lastKnownWeight = profile.weight;
+    let lastKnownWeight = Number(profile.startingWeight) || profile.weight;
     const weightMap = new Map(weightEntries.map(w => [w.date, w.weight]));
     
     const chartData: CorrelationDataPoint[] = allDates.map(date => {

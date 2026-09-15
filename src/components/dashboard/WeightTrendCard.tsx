@@ -6,16 +6,17 @@ interface WeightTrendCardProps {
   entries: Array<{ date: string; weight: number }>;
   targetWeight: number;
   profileWeight?: number;
+  startingWeight?: number;
 }
 
-export const WeightTrendCard: React.FC<WeightTrendCardProps> = ({ entries, targetWeight, profileWeight = 0 }) => {
+export const WeightTrendCard: React.FC<WeightTrendCardProps> = ({ entries, targetWeight, profileWeight = 0, startingWeight }) => {
   // Deduplicate entries by date (keep the last one logged for that day) to prevent chart rendering glitches
   const uniqueEntriesMap = new Map<string, { date: string; weight: number }>();
   entries.forEach(entry => uniqueEntriesMap.set(entry.date, entry));
   const cleanEntries = Array.from(uniqueEntriesMap.values());
 
   const latestWeight = cleanEntries.length > 0 ? cleanEntries[cleanEntries.length - 1].weight : profileWeight;
-  const startWeight = cleanEntries.length > 0 ? cleanEntries[0].weight : profileWeight;
+  const startWeight = Number(startingWeight) || (cleanEntries.length > 0 ? cleanEntries[0].weight : profileWeight);
   const delta = latestWeight - startWeight;
   const isLoss = delta <= 0;
 

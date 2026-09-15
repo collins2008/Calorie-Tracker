@@ -200,15 +200,21 @@ export default function SettingsPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
+                <label className="block text-sm text-zinc-400 mb-1">Starting Wt (kg)</label>
+                <input type="number" step="0.1" min="10" name="startingWeight" value={formData.startingWeight || ''} onChange={handleChange}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+              </div>
+              <div>
                 <label className="block text-sm text-zinc-400 mb-1">Target Wt (kg)</label>
                 <input type="number" step="0.1" min="10" name="targetWeight" value={formData.targetWeight || ''} onChange={handleChange}
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
               </div>
-              <div>
-                <label className="block text-sm text-zinc-400 mb-1">Target Date</label>
-                <input type="date" min={new Date().toISOString().split('T')[0]} name="targetDate" value={formData.targetDate || ''} onChange={handleChange}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
-              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm text-zinc-400 mb-1">Target Date</label>
+              <input type="date" min={new Date().toISOString().split('T')[0]} name="targetDate" value={formData.targetDate || ''} onChange={handleChange}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
             </div>
 
             <div className="pt-3 border-t border-zinc-800 space-y-3">

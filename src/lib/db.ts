@@ -8,6 +8,7 @@ export interface UserProfile {
   age: number;
   gender: 'male' | 'female';
   activityLevel: 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active';
+  startingWeight?: number; // kg
   targetWeight: number; // kg
   targetDate: string; // ISO date 'YYYY-MM-DD'
   neck?: number; // cm

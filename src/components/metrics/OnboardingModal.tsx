@@ -40,6 +40,7 @@ export default function OnboardingModal() {
       name: formData.name,
       gender: formData.gender as 'male' | 'female',
       weight,
+      startingWeight: weight,
       height,
       age,
       activityLevel: formData.activityLevel as any,

@@ -137,7 +137,7 @@ export default function DashboardPage() {
         </motion.div>
 
         <motion.div variants={item}>
-          <WeightTrendCard entries={weightEntries} targetWeight={profile.targetWeight} profileWeight={profile.weight} />
+          <WeightTrendCard entries={weightEntries} targetWeight={profile.targetWeight} profileWeight={profile.weight} startingWeight={profile.startingWeight} />
         </motion.div>
 
         <motion.div variants={item}>
