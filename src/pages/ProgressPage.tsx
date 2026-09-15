@@ -60,7 +60,16 @@ export default function ProgressPage() {
     } else {
       try {
         toast('Scanning physique...', 'info');
-        const scanPromise = analyzeBodyComposition(base64Image, apiKey);
+
+        const userStats = profile ? {
+          neck: profile.neck,
+          waist: profile.waist,
+          height: profile.height,
+          weight: profile.weight,
+          gender: profile.gender
+        } : undefined;
+
+        const scanPromise = analyzeBodyComposition(base64Image, apiKey, userStats);
         const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("AI Analysis timed out. Please try again.")), 30000));
         const analysis = await Promise.race([scanPromise, timeoutPromise]) as any;
         estimatedBodyFat = analysis.estimatedBodyFat;
