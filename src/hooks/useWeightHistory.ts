@@ -14,11 +14,18 @@ export function useWeightHistory() {
   const weightChange = latestWeight !== null && previousWeight !== null ? latestWeight - previousWeight : 0;
 
   const addWeightEntry = async (date: string, weight: number) => {
-    await db.weightEntries.put({
-      date,
-      weight,
-      createdAt: Date.now(),
-    });
+    // Upsert logic: prevent multiple entries for the same date
+    const existing = await db.weightEntries.where('date').equals(date).first();
+    
+    if (existing && existing.id !== undefined) {
+      await db.weightEntries.update(existing.id, { weight, createdAt: Date.now() });
+    } else {
+      await db.weightEntries.add({
+        date,
+        weight,
+        createdAt: Date.now(),
+      });
+    }
     
     // Attempt to sync the profile's weight if a profile exists
     const profile = await db.profile.get('default');

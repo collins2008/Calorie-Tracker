@@ -9,8 +9,13 @@ interface WeightTrendCardProps {
 }
 
 export const WeightTrendCard: React.FC<WeightTrendCardProps> = ({ entries, targetWeight, profileWeight = 0 }) => {
-  const latestWeight = entries.length > 0 ? entries[entries.length - 1].weight : profileWeight;
-  const startWeight = entries.length > 0 ? entries[0].weight : profileWeight;
+  // Deduplicate entries by date (keep the last one logged for that day) to prevent chart rendering glitches
+  const uniqueEntriesMap = new Map<string, { date: string; weight: number }>();
+  entries.forEach(entry => uniqueEntriesMap.set(entry.date, entry));
+  const cleanEntries = Array.from(uniqueEntriesMap.values());
+
+  const latestWeight = cleanEntries.length > 0 ? cleanEntries[cleanEntries.length - 1].weight : profileWeight;
+  const startWeight = cleanEntries.length > 0 ? cleanEntries[0].weight : profileWeight;
   const delta = latestWeight - startWeight;
   const isLoss = delta <= 0;
 
@@ -21,7 +26,7 @@ export const WeightTrendCard: React.FC<WeightTrendCardProps> = ({ entries, targe
           <h3 className="text-sm font-semibold text-zinc-400 mb-1">Current Weight</h3>
           <div className="text-2xl font-bold text-zinc-100">{latestWeight.toFixed(1)} kg</div>
         </div>
-        {entries.length > 1 && (
+        {cleanEntries.length > 1 && (
           <div className={`text-sm font-medium ${isLoss ? 'text-emerald-400' : 'text-amber-400'}`}>
             {delta > 0 ? '+' : ''}{delta.toFixed(1)} kg total
           </div>
@@ -30,7 +35,7 @@ export const WeightTrendCard: React.FC<WeightTrendCardProps> = ({ entries, targe
 
       <div className="h-48 w-full -ml-4">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={entries} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+          <LineChart data={cleanEntries} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
             <XAxis
               dataKey="date"
