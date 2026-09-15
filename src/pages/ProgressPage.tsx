@@ -10,6 +10,7 @@ import { getToday } from '../lib/dateUtils';
 import { useToast } from '../components/ui/Toast';
 import { compressImage } from '../lib/imageUtils';
 import { analyzeBodyComposition } from '../lib/aiVision';
+import { db } from '../lib/db';
 
 export default function ProgressPage() {
   const [activeTab, setActiveTab] = useState<'charts' | 'gallery'>('charts');
@@ -89,8 +90,9 @@ export default function ProgressPage() {
         bodyFatPercentage: estimatedBodyFat
       });
 
-      if (profile && estimatedBodyFat) {
-        // await saveProfile({ ...profile, bodyFatPercentage: estimatedBodyFat });
+      if (estimatedBodyFat !== undefined) {
+        await db.profile.update('default', { bodyFatPercentage: estimatedBodyFat });
+        toast('Profile biodata synced!', 'success');
       }
     } catch (err: any) {
       toast('Failed to save photo to gallery', 'error');
@@ -295,6 +297,13 @@ export default function ProgressPage() {
                 <img src={photo.imageBase64} alt={`Progress photo from ${photo.date}`} loading="lazy" className="w-full aspect-[3/4] object-cover rounded-2xl bg-zinc-900" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent rounded-2xl opacity-90" />
                 
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDeletePhoto(photo.id); }}
+                  className="absolute top-2 right-2 bg-red-500/20 text-red-500 p-2 rounded-full backdrop-blur-md opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 size={14} />
+                </button>
+
                 <div className="absolute bottom-3 left-3 right-3">
                   <p className="text-xs font-medium text-zinc-300">{photo.date}</p>
                   <div className="flex justify-between items-end mt-1">
