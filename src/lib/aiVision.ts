@@ -26,17 +26,28 @@ export async function analyzeBodyComposition(
   let statsContext = '';
   if (userStats?.neck && userStats?.waist && userStats?.height) {
     const isMale = userStats.gender !== 'female';
+    const w = Number(userStats.waist);
+    const n = Number(userStats.neck);
+    const h = Number(userStats.height);
+    
+    let mathStatement = '';
+    if (isMale && w > n && h > 0) {
+      const bf = 495 / (1.0324 - 0.19077 * Math.log10(w - n) + 0.15456 * Math.log10(h)) - 450;
+      mathStatement = `Based on the clinical U.S. Navy Body Fat formula, the user's mathematical body fat is exactly ${bf.toFixed(1)}%.`;
+    } else if (!isMale) {
+      mathStatement = `The user is female. We lack hip measurements for the exact Navy formula, but use their waist (${w}cm) and neck (${n}cm) anthropometrics to anchor your estimate.`;
+    }
+
     statsContext = `
 The user has provided their exact physical measurements:
 - Gender: ${userStats.gender || 'male'}
-- Height: ${userStats.height} cm
+- Height: ${h} cm
 - Weight: ${userStats.weight || 'unknown'} kg
-- Neck Circumference: ${userStats.neck} cm
-- Waist Circumference: ${userStats.waist} cm
+- Neck Circumference: ${n} cm
+- Waist Circumference: ${w} cm
 
-CRITICAL INSTRUCTION: You MUST cross-reference your visual estimation with the U.S. Navy Body Fat Mathematical Formula using their measurements. 
-${isMale ? 'For men: 495 / (1.0324 - 0.19077 * log10(waist - neck) + 0.15456 * log10(height)) - 450' : 'For women, the exact Navy formula requires hip measurements, which are not provided. Please use standard anthropometric estimation for women based on waist, neck, and height to mathematically anchor your visual estimate.'}
-If the visual data contradicts the mathematical data, blend them intelligently for the most accurate final result.
+CRITICAL INSTRUCTION: ${mathStatement}
+You MUST use this mathematical data as your primary baseline anchor. Cross-reference it with the visual data in the photo. If the visual data shows they are significantly leaner or softer than the math suggests, adjust the mathematical baseline by a few percentage points. Provide the final blended result.
 `;
   }
 
