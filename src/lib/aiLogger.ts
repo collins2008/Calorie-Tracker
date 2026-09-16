@@ -170,7 +170,7 @@ Parse into this STRICT JSON format only (NO markdown):
       }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s timeout
 
       let response;
       try {
@@ -188,8 +188,10 @@ Parse into this STRICT JSON format only (NO markdown):
 
       const data = await response.json();
       
-      // If the API explicitly says model not found, try the next one in the loop
       if (data.error) {
+        if (data.error.code === 429 || data.error.message.includes('quota') || data.error.message.includes('exhausted')) {
+          throw new Error('QUOTA_EXCEEDED');
+        }
         if (data.error.message.includes('not found') || data.error.message.includes('not supported')) {
           lastError = new Error(`Gemini API Error (${model}): ${data.error.message}`);
           continue; 
@@ -199,7 +201,6 @@ Parse into this STRICT JSON format only (NO markdown):
 
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (text) {
-        // More robust JSON extraction to ignore markdown code blocks
         let jsonStr = text.replace(/```json/gi, '').replace(/```/g, '').trim();
         const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
@@ -216,6 +217,15 @@ Parse into this STRICT JSON format only (NO markdown):
       throw new Error('No valid response from API');
     } catch (error: any) {
       lastError = error;
+      
+      // If it's a quota issue or timeout (AbortError), fallback to local mock mode immediately
+      if (error.message === 'QUOTA_EXCEEDED' || error.name === 'AbortError' || error.message.includes('aborted')) {
+        console.warn('AI API failed due to quota or timeout. Falling back to local offline parser.');
+        const fallback = parseMockMode(input || "Meal image", clientDate, userWeight);
+        fallback.aiReasoning = `[API Busy/Timeout - Used Offline Fallback] ${fallback.aiReasoning}`;
+        return fallback;
+      }
+
       // Only continue if it's our "not found" error caught above, otherwise throw
       if (!error.message?.includes('not found') && !error.message?.includes('not supported')) {
         console.error(`AI Parsing Error with ${model}:`, error);

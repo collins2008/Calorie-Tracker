@@ -100,6 +100,9 @@ Return strict JSON (NO MARKDOWN):
       const data = await response.json();
       
       if (data.error) {
+        if (data.error.code === 429 || data.error.message.includes('quota') || data.error.message.includes('exhausted')) {
+          throw new Error('API Quota Exceeded. Too many people are using the API, or you are out of free requests. Please try again in a few minutes.');
+        }
         if (data.error.message.includes('not found') || data.error.message.includes('not supported')) {
           lastError = new Error(`Gemini API Error (${model}): ${data.error.message}`);
           continue; 
