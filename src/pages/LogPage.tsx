@@ -51,24 +51,30 @@ export default function LogPage() {
     if (galleryInputRef.current) galleryInputRef.current.value = '';
   };
 
-  const handleOfflineSave = async () => {
+  const handleQueueSave = async (reason: 'offline' | 'busy') => {
     await db.syncQueue.add({
       date,
       input,
       imageBase64: imagePreview || undefined,
       createdAt: Date.now()
     });
-    toast("You're offline. Meal saved and will be analyzed by AI when you reconnect!", "info");
+    
+    if (reason === 'offline') {
+      toast("You're offline. Meal saved to queue and will be analyzed later!", "info");
+    } else {
+      toast("API is busy. Meal saved to queue. Tap 'Retry' in the banner above when ready!", "info");
+    }
+    
     setInput('');
     setImagePreview(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!input.trim() && !imagePreview) return;
 
     if (!navigator.onLine) {
-      await handleOfflineSave();
+      await handleQueueSave('offline');
       return;
     }
 
@@ -82,7 +88,7 @@ export default function LogPage() {
       if (parsed) {
         await addEntry({ ...parsed, date }); // force exact date
         await checkIn();
-        toast(`✅ Logged: ${parsed.description} (${parsed.calories} kcal)`, 'success');
+        toast(`✨ Logged: ${parsed.description} (${parsed.calories} kcal)`, 'success');
         setInput('');
         setImagePreview(null);
       } else {
@@ -90,8 +96,14 @@ export default function LogPage() {
       }
     } catch (err: any) {
       console.error('Submit Error:', err);
-      if (err.message?.toLowerCase().includes('fetch') || err.message?.toLowerCase().includes('network')) {
-        await handleOfflineSave();
+      const msg = err.message?.toLowerCase() || '';
+      const isNetworkError = msg.includes('fetch') || msg.includes('network');
+      const isBusyError = err.message === 'QUOTA_EXCEEDED' || err.name === 'AbortError' || msg.includes('aborted');
+
+      if (isNetworkError) {
+        await handleQueueSave('offline');
+      } else if (isBusyError) {
+        await handleQueueSave('busy');
       } else {
         toast(`Error: ${err.message}`, 'error');
       }
@@ -142,16 +154,15 @@ export default function LogPage() {
       {queue.length > 0 && (
         <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-between">
           <div className="flex items-center gap-3 text-sm text-blue-400">
-            <WifiOff size={18} />
-            <span>{queue.length} meal(s) waiting for connection</span>
+            <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} />
+            <span>{queue.length} meal(s) pending AI sync</span>
           </div>
           <button 
             onClick={processQueue} 
             disabled={isSyncing}
             className="flex items-center gap-1 text-xs bg-blue-500/20 hover:bg-blue-500/30 transition-colors px-3 py-1.5 rounded-lg text-blue-300 font-medium disabled:opacity-50"
           >
-            {isSyncing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
-            Sync
+            {isSyncing ? 'Retrying...' : 'Retry Now'}
           </button>
         </div>
       )}

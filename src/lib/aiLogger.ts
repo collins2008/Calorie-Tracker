@@ -218,12 +218,10 @@ Parse into this STRICT JSON format only (NO markdown):
     } catch (error: any) {
       lastError = error;
       
-      // If it's a quota issue or timeout (AbortError), fallback to local mock mode immediately
+      // We purposefully throw quota and timeout errors up so they can be added to the Pending Queue
       if (error.message === 'QUOTA_EXCEEDED' || error.name === 'AbortError' || error.message.includes('aborted')) {
-        console.warn('AI API failed due to quota or timeout. Falling back to local offline parser.');
-        const fallback = parseMockMode(input || "Meal image", clientDate, userWeight);
-        fallback.aiReasoning = `[API Busy/Timeout - Used Offline Fallback] ${fallback.aiReasoning}`;
-        return fallback;
+        console.warn('AI API failed due to quota or timeout. Throwing to allow queue storage.');
+        throw error;
       }
 
       // Only continue if it's our "not found" error caught above, otherwise throw
