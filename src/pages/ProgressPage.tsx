@@ -139,7 +139,12 @@ export default function ProgressPage() {
   const thisWeekData = correlationData.filter(d => d.date >= weekStart && d.date <= weekEnd);
   const weeklyConsumed = thisWeekData.reduce((sum, d) => sum + d.consumed, 0);
   const weeklyBurned = thisWeekData.reduce((sum, d) => sum + d.burned, 0);
-  const weeklyTarget = (profile?.dailyCalorieTarget || 0) * 7;
+  
+  // Calculate Target So Far (prorated for the days elapsed this week)
+  const today = new Date();
+  const weekStartDate = new Date(weekStart);
+  const daysElapsed = Math.max(1, Math.floor((today.getTime() - weekStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+  const targetSoFar = (profile?.dailyCalorieTarget || 0) * Math.min(7, daysElapsed);
 
   return (
     <div className="max-w-lg mx-auto py-4">
@@ -207,7 +212,7 @@ export default function ProgressPage() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-            <WeeklyCalorieCard consumed={weeklyConsumed} target={weeklyTarget} burned={weeklyBurned} />
+            <WeeklyCalorieCard consumed={weeklyConsumed} target={targetSoFar} burned={weeklyBurned} />
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
