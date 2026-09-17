@@ -138,6 +138,7 @@ export default function ProgressPage() {
   const { start: weekStart, end: weekEnd } = getWeekRange(getToday());
   const thisWeekData = correlationData.filter(d => d.date >= weekStart && d.date <= weekEnd);
   const weeklyConsumed = thisWeekData.reduce((sum, d) => sum + d.consumed, 0);
+  const weeklyBurned = thisWeekData.reduce((sum, d) => sum + d.burned, 0);
   const weeklyTarget = (profile?.dailyCalorieTarget || 0) * 7;
 
   return (
@@ -206,7 +207,7 @@ export default function ProgressPage() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-            <WeeklyCalorieCard consumed={weeklyConsumed} target={weeklyTarget} />
+            <WeeklyCalorieCard consumed={weeklyConsumed} target={weeklyTarget} burned={weeklyBurned} />
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
