@@ -5,8 +5,8 @@ import { useWeightHistory } from '../hooks/useWeightHistory';
 import { useProfile } from '../hooks/useProfile';
 import { useProgressPhotos } from '../hooks/useProgressPhotos';
 import { useCorrelationData } from '../hooks/useCorrelationData';
-import { CorrelationMatrixCard } from '../components/dashboard';
-import { getToday } from '../lib/dateUtils';
+import { CorrelationMatrixCard, WeeklyCalorieCard } from '../components/dashboard';
+import { getToday, getWeekRange } from '../lib/dateUtils';
 import { useToast } from '../components/ui/Toast';
 import { compressImage } from '../lib/imageUtils';
 import { analyzeBodyComposition } from '../lib/aiVision';
@@ -135,6 +135,11 @@ export default function ProgressPage() {
     }
   }
 
+  const { start: weekStart, end: weekEnd } = getWeekRange(getToday());
+  const thisWeekData = correlationData.filter(d => d.date >= weekStart && d.date <= weekEnd);
+  const weeklyConsumed = thisWeekData.reduce((sum, d) => sum + d.consumed, 0);
+  const weeklyTarget = (profile?.dailyCalorieTarget || 0) * 7;
+
   return (
     <div className="max-w-lg mx-auto py-4">
       <header className="mb-6">
@@ -198,6 +203,10 @@ export default function ProgressPage() {
                 <Plus size={18} /> Log
               </button>
             </form>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+            <WeeklyCalorieCard consumed={weeklyConsumed} target={weeklyTarget} />
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
