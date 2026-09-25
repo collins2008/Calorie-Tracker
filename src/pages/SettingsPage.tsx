@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useProfile } from '../hooks/useProfile';
 import { db } from '../lib/db';
+import { exportDataAsJSON, importDataFromJSON } from '../lib/backupUtils';
 import { useToast } from '../components/ui/Toast';
 import { Save, Download, Trash2, Info, Key, User, Database } from 'lucide-react';
 import { calculateBMR, calculateTDEE, calculateDailyTargets } from '../lib/bmrCalculator';
@@ -275,6 +276,61 @@ export default function SettingsPage() {
               API Key is active
             </p>
           )}
+        </section>
+
+        {/* Data Backup & Recovery */}
+        <section className="bg-zinc-900 rounded-2xl p-6 mt-6 mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Database size={20} className="text-zinc-300" />
+            <h2 className="font-semibold text-zinc-300">Data Backup & Recovery</h2>
+          </div>
+          <p className="text-xs text-zinc-500 mb-6">
+            Since this app runs entirely offline to protect your privacy, your data is saved only in your browser's local cache. 
+            We highly recommend exporting your data occasionally to prevent data loss if your browser cache gets cleared by your phone.
+          </p>
+          
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={async () => {
+                try {
+                  await exportDataAsJSON();
+                  toast('Data exported successfully!', 'success');
+                } catch (e: any) {
+                  toast('Export failed: ' + e.message, 'error');
+                }
+              }}
+              className="w-full flex justify-center items-center gap-2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 py-3 rounded-xl font-medium hover:bg-emerald-500/20 transition-colors"
+            >
+              <Download size={18} />
+              Export Data (Backup)
+            </button>
+
+            <label className="w-full flex justify-center items-center gap-2 bg-zinc-800 text-zinc-300 py-3 rounded-xl font-medium hover:bg-zinc-700 transition-colors cursor-pointer text-center">
+              <Save size={18} />
+              Import Data (Restore)
+              <input 
+                type="file" 
+                accept=".json" 
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (!window.confirm('WARNING: This will overwrite ALL current data with the imported file. Proceed?')) {
+                    e.target.value = '';
+                    return;
+                  }
+                  try {
+                    await importDataFromJSON(file);
+                    toast('Data restored successfully! Reloading...', 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                  } catch (err: any) {
+                    toast('Failed to restore data: ' + err.message, 'error');
+                  }
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          </div>
         </section>
 
         {/* Developer Tools */}
