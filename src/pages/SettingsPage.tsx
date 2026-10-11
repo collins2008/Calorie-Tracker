@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useProfile } from '../hooks/useProfile';
 import { db } from '../lib/db';
 import { exportDataAsJSON, importDataFromJSON } from '../lib/backupUtils';
+import { storage } from '../lib/storage';
 import { useToast } from '../components/ui/Toast';
 import { Save, Download, Trash2, Info, Key, User, Database } from 'lucide-react';
 import { calculateBMR, calculateTDEE, calculateDailyTargets } from '../lib/bmrCalculator';
@@ -15,8 +16,9 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (profile) setFormData(profile);
-    const savedKey = localStorage.getItem('gemini_api_key');
-    if (savedKey) setApiKey(savedKey);
+    storage.get('gemini_api_key').then(savedKey => {
+      if (savedKey) setApiKey(savedKey);
+    });
   }, [profile]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -59,8 +61,8 @@ export default function SettingsPage() {
 
   // ... (keep rest of handlers)
 
-  const handleSaveApiKey = () => {
-    localStorage.setItem('gemini_api_key', apiKey);
+  const handleSaveApiKey = async () => {
+    await storage.set('gemini_api_key', apiKey);
     toast('API Key saved', 'success');
   };
 

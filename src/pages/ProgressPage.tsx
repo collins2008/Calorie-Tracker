@@ -10,6 +10,7 @@ import { getToday, getWeekRange } from '../lib/dateUtils';
 import { useToast } from '../components/ui/Toast';
 import { compressImage } from '../lib/imageUtils';
 import { analyzeBodyComposition } from '../lib/aiVision';
+import { storage } from '../lib/storage';
 import { db } from '../lib/db';
 
 export default function ProgressPage() {
@@ -54,7 +55,7 @@ export default function ProgressPage() {
     }
 
     let estimatedBodyFat: number | undefined = undefined;
-    const apiKey = localStorage.getItem('gemini_api_key');
+    const apiKey = await storage.get('gemini_api_key');
 
     if (!apiKey) {
       toast('Saved photo! Add API key in settings for AI body fat scans.', 'info');

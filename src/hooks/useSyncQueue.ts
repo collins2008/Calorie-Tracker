@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../lib/db';
 import { parseNaturalLanguage } from '../lib/aiLogger';
+import { storage } from '../lib/storage';
 import { useToast } from '../components/ui/Toast';
 import { useStreak } from './useStreak';
 
@@ -20,7 +21,7 @@ export function useSyncQueue() {
     const items = await db.syncQueue.toArray();
     if (items.length === 0) return;
     
-    const apiKey = localStorage.getItem('gemini_api_key');
+    const apiKey = await storage.get('gemini_api_key');
     if (!apiKey) return;
 
     setIsSyncing(true);

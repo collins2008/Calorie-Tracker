@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { format, addDays, subDays, parseISO } from 'date-fns';
 import { ChevronLeft, ChevronRight, Send, Trash2, Dumbbell, UtensilsCrossed, Loader2, Camera, WifiOff, RefreshCw, Image as ImageIcon, Star } from 'lucide-react';
@@ -7,6 +7,7 @@ import { useStreak } from '../hooks/useStreak';
 import { useSyncQueue } from '../hooks/useSyncQueue';
 import { useFavorites } from '../hooks/useFavorites';
 import { parseNaturalLanguage } from '../lib/aiLogger';
+import { storage } from '../lib/storage';
 import { getToday, formatDisplayDate, isToday as checkIsToday } from '../lib/dateUtils';
 import { useToast } from '../components/ui/Toast';
 import { db } from '../lib/db';
@@ -32,8 +33,13 @@ export default function LogPage() {
   const [input, setInput] = useState('');
   const [isParsing, setIsParsing] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [hasApiKey, setHasApiKey] = useState(true);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    storage.get('gemini_api_key').then(key => setHasApiKey(!!key));
+  }, []);
 
   const handlePrevDay = () => setDate(format(subDays(parseISO(date), 1), 'yyyy-MM-dd'));
   const handleNextDay = () => setDate(format(addDays(parseISO(date), 1), 'yyyy-MM-dd'));
@@ -80,7 +86,7 @@ export default function LogPage() {
 
     setIsParsing(true);
     try {
-      const apiKey = localStorage.getItem('gemini_api_key') || undefined;
+      const apiKey = (await storage.get('gemini_api_key')) || undefined;
       const userProfile = await db.profile.get('default');
       const userWeight = userProfile?.weight || 75;
       
@@ -168,7 +174,7 @@ export default function LogPage() {
       )}
 
       {/* AI Key Warning */}
-      {!localStorage.getItem('gemini_api_key') && (
+      {!hasApiKey && (
         <div className="mb-6 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex gap-3 text-sm text-amber-400/90">
           <span className="text-lg">⚠️</span>
           <p>
