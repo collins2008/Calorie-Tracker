@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
+import { Capacitor } from '@capacitor/core';
 
-// Check if app is already installed as PWA
+// Check if app is already installed as PWA or running as native app
 function isStandalone(): boolean {
-  return window.matchMedia('(display-mode: standalone)').matches
+  return Capacitor.isNativePlatform()
+    || window.matchMedia('(display-mode: standalone)').matches
     || (window.navigator as any).standalone === true;
 }
 
